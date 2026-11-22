@@ -2023,9 +2023,11 @@ begin
       else if(Column=5)then
       begin
         NodeData.Column.default_value_is_null := 0;
+        // Port: an expression in parentheses, as in SQL ("(1 + 2)", MySQL 8.0.13+, MariaDB 10.2+), is not a string
         if (CompareText(NewText, 'NULL')=0) or
           IsNumeric(NewText) or
-          (CompareText(NewText, 'CURRENT_TIMESTAMP')=0) then
+          (CompareText(NewText, 'CURRENT_TIMESTAMP')=0) or
+          ((Length(NewText) > 2) and (NewText[1] = '(') and (NewText[Length(NewText)] = ')')) then
           NodeData.Column.default_value := NewText
         else
         begin

@@ -110,7 +110,8 @@ an installer (ADR-0014); macOS is deferred (ADR-0039; `docs/macos-setup.md`).
   - the model has no table CHECK constraints: edits keep them, the editor cannot create them;
   - generated expressions, `ON UPDATE`, `INVISIBLE` and column CHECKs are kept but not shown or editable in the
     editor; expression defaults (`DEFAULT (expr)`) and defaults with a quote are kept since 2026-11-22 (they were
-    written back as a wrong string; `TestExpressionDefault`);
+    written back as a wrong string; `TestExpressionDefault`); an expression in parentheses typed into the Default cell of the column grid stays an
+    expression (it was quoted as a string);
   - editing indices (new, columns, prefix, rename, remove) and foreign keys (new, actions, remove) through the model
     is tested on the matrix (`TestEditIndices`, `TestEditForeignKeys`, 2026-11-22);
   - data types and engines: ADR-0034 (JSON, YEAR, BINARY, VARBINARY added; engines from `SHOW ENGINES`).
