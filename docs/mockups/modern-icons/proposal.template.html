@@ -1,0 +1,373 @@
+<!-- SPDX-License-Identifier: GPL-2.0-or-later -->
+<!-- Design proposal "modern icons" (ADR-0009, step 3). make_proposal.py fills in the original PNGs. -->
+<title>QueryMole Icon Refresh</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+/* Layout: a single reading column; each icon group is a two-column "classic | modern" table on a window-grey sample surface. */
+:root {
+  --bg: #f4f5f7;
+  --fg: #1d232b;
+  --muted: #5b6573;
+  --line: #d9dde3;
+  --panel: #ffffff;
+  --accent: #2f7fb8;
+  --win: #ecedef;          /* the program's own window colour: icons are always judged on it */
+  --win-fg: #1d232b;
+  --win-line: #c3c7cd;
+  --font-head: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-ui: Tahoma, "Segoe UI", Verdana, "DejaVu Sans", Arial, sans-serif;
+  --z: 1;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #15191e; --fg: #e5e9ee; --muted: #9aa4b1; --line: #2c333c; --panel: #1c2128; --accent: #6db6e6; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #15191e; --fg: #e5e9ee; --muted: #9aa4b1; --line: #2c333c; --panel: #1c2128; --accent: #6db6e6; color-scheme: dark }
+
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 980px; margin: 0 auto; padding-block: 40px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 44px; }
+h1, h2, h3 { font-family: var(--font-head); font-weight: 600; text-wrap: balance; margin: 0; }
+h1 { font-size: 34px; line-height: 1.15; }
+h2 { font-size: 22px; }
+h3 { font-size: 15px; font-weight: 600; }
+p { margin: 0; max-width: 68ch; }
+.eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+section { display: grid; gap: 16px; }
+.lead { color: var(--muted); font-size: 16px; }
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.rule { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 4px; }
+.rule p { color: var(--muted); font-size: 14px; }
+code { font-size: 13px; }
+
+/* controls */
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg button { font: inherit; font-size: 13px; padding: 5px 12px; border: 0; background: var(--panel); color: var(--fg); cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+.seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.controls .lbl { font-size: 13px; color: var(--muted); }
+
+/* program-like surfaces */
+.win { background: var(--win); color: var(--win-fg); border: 1px solid var(--win-line); border-radius: 4px; font-family: var(--font-ui); font-size: 11px; overflow-x: auto; }
+.cmp { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.cmp > div { display: grid; gap: 6px; min-width: 0; }
+.cmp .tag { font-size: 12px; color: var(--muted); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+@media (max-width: 700px) { .cmp { grid-template-columns: 1fr; } }
+
+/* toolbar mock-up */
+.tb { display: flex; align-items: center; gap: calc(2px * var(--z)); padding: calc(4px * var(--z)); min-width: max-content; }
+.tbtn { display: flex; flex-direction: column; align-items: center; gap: calc(1px * var(--z)); min-width: calc(44px * var(--z)); font-size: calc(11px * var(--z)); color: #333; }
+.tbtn .box { width: calc(27px * var(--z)); height: calc(29px * var(--z)); display: grid; place-items: center; }
+.tbtn .box.s { width: calc(24px * var(--z)); height: calc(26px * var(--z)); }
+.sep { width: 1px; align-self: stretch; background: var(--win-line); margin: 0 calc(4px * var(--z)); }
+.sqlbox { width: calc(150px * var(--z)); height: calc(42px * var(--z)); background: #fff; border: 1px solid #a9afb7; margin: 0 calc(6px * var(--z)); }
+.disabled .ico { filter: grayscale(1) opacity(.42); }
+.disabled .tbtn { color: #9aa0a8; }
+
+/* icon tables */
+.grp { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.grp header { padding: 12px 16px; border-bottom: 1px solid var(--line); display: grid; gap: 2px; }
+.grp header p { font-size: 13px; color: var(--muted); }
+.cells { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+.cell { display: grid; grid-template-columns: 1fr 1fr; align-items: center; justify-items: center; gap: 4px 8px; padding: 14px 8px 10px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--win); color: var(--win-fg); }
+.cell .name { grid-column: 1 / -1; font-size: 11px; color: #4f5966; font-family: var(--font-ui); text-align: center; }
+.cell .slot { display: grid; place-items: center; min-height: calc(var(--px) * 1px * var(--z)); }
+.grp.big .cells { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+
+img.ico { image-rendering: auto; display: block; }
+svg.ico { display: block; overflow: visible; }
+
+/* options dialog mock-up */
+.opt { display: grid; grid-template-columns: calc(118px * var(--z)) 1fr; gap: calc(8px * var(--z)); padding: calc(8px * var(--z)); min-width: max-content; }
+.cat { background: #fff; border: 1px solid #a9afb7; display: flex; flex-direction: column; align-items: center; gap: calc(14px * var(--z)); padding-bottom: calc(10px * var(--z)); font-size: calc(11px * var(--z)); }
+.cat .hd { align-self: stretch; text-align: center; background: #eceef1; border-bottom: 1px solid #c8ccd2; padding: calc(2px * var(--z)) 0; }
+.cat .it { display: grid; justify-items: center; gap: calc(2px * var(--z)); }
+.cat .it.sel span { background: #6b7480; color: #fff; padding: 0 calc(3px * var(--z)); }
+.page { border: 1px solid #a9afb7; background: var(--win); min-width: calc(150px * var(--z)); display: grid; align-content: start; }
+.page .ph { margin: calc(4px * var(--z)); background: #fff; border: 1px solid #555; font-weight: bold; padding: calc(3px * var(--z)) calc(5px * var(--z)); font-size: calc(11px * var(--z)); }
+.page .ln { height: calc(9px * var(--z)); margin: calc(6px * var(--z)) calc(10px * var(--z)) 0; background: #d5d9de; border-radius: 2px; }
+.page .ln.w { width: 60%; }
+
+/* result bar */
+.rbar { display: flex; justify-content: flex-end; gap: 0; padding: 0; min-width: max-content; border-top: 1px solid var(--win-line); }
+.rbtn { display: flex; align-items: center; gap: calc(4px * var(--z)); padding: calc(4px * var(--z)) calc(8px * var(--z)); border-left: 1px solid var(--win-line); font-size: calc(10px * var(--z)); color: #444; }
+
+/* tree */
+.tree { background: #fff; margin: calc(6px * var(--z)); border: 1px solid #a9afb7; padding: calc(4px * var(--z)); display: grid; gap: calc(2px * var(--z)); font-size: calc(11px * var(--z)); min-width: max-content; }
+.tree .r { display: flex; align-items: center; gap: calc(4px * var(--z)); }
+
+.next ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; max-width: 70ch; }
+.note { font-size: 13px; color: var(--muted); }
+@media (prefers-reduced-motion: no-preference) { .seg button { transition: background .12s; } }
+</style>
+
+<!-- ======== modern icon sprite ======== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+<defs>
+  <linearGradient id="gGreen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7fd06c"/><stop offset="1" stop-color="#44a84d"/></linearGradient>
+  <linearGradient id="gSlate" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fa7c0"/><stop offset="1" stop-color="#5a7896"/></linearGradient>
+  <linearGradient id="gRed" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ec5d52"/><stop offset="1" stop-color="#c2392f"/></linearGradient>
+  <linearGradient id="gBlue" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#58bce6"/><stop offset="1" stop-color="#1f7fb8"/></linearGradient>
+  <linearGradient id="gGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f8d874"/><stop offset="1" stop-color="#dca526"/></linearGradient>
+  <linearGradient id="gServer" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c3c5ec"/><stop offset="1" stop-color="#8d90cf"/></linearGradient>
+  <linearGradient id="gBubble" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3f8fd"/><stop offset="1" stop-color="#c9def4"/></linearGradient>
+
+  <circle id="discG" cx="12" cy="12" r="10.75" fill="url(#gGreen)" stroke="#2e7d3b"/>
+  <circle id="discS" cx="12" cy="12" r="10.75" fill="url(#gSlate)" stroke="#48627d"/>
+  <path id="boltW" d="M13.4 5 8 13h3.5l-1.1 6 5.6-8.2h-3.6z" fill="#fff" stroke="#fff" stroke-width=".6" stroke-linejoin="round"/>
+</defs>
+
+<!-- query toolbar (24) -->
+<symbol id="m-back" viewBox="0 0 24 24"><use href="#discG"/><path d="M12.4 7.6 8 12l4.4 4.4M8.6 12h8.2" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="m-next" viewBox="0 0 24 24"><use href="#discG"/><path d="M11.6 7.6 16 12l-4.4 4.4M15.4 12H7.2" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="m-refresh" viewBox="0 0 24 24"><use href="#discG"/><path d="M15.55 9.65A4.6 4.6 0 1 1 8.09 11.04" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><path d="M9.98 8.20L10.21 12.75 5.62 9.54z" fill="#fff" stroke="#fff" stroke-width="1" stroke-linejoin="round"/></symbol>
+<symbol id="m-execute" viewBox="0 0 24 24"><use href="#discG"/><use href="#boltW"/></symbol>
+<symbol id="m-stop" viewBox="0 0 24 24"><path d="M7.1 1.3h9.8l5.8 5.8v9.8l-5.8 5.8H7.1l-5.8-5.8V7.1z" fill="url(#gRed)" stroke="#9e2a22" stroke-linejoin="round"/><text x="12" y="14.2" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="6.1" fill="#fff" text-anchor="middle" letter-spacing=".15">STOP</text></symbol>
+
+<!-- script toolbar (24) -->
+<symbol id="m-s-execute" viewBox="0 0 24 24"><use href="#discG"/><use href="#boltW"/></symbol>
+<symbol id="m-s-continue" viewBox="0 0 24 24"><use href="#discS"/><path d="M9.6 7.4 16.8 12l-7.2 4.6z" fill="#fff" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/></symbol>
+<symbol id="m-s-pause" viewBox="0 0 24 24"><use href="#discS"/><rect x="8.4" y="7.4" width="2.8" height="9.2" rx=".9" fill="#fff"/><rect x="12.8" y="7.4" width="2.8" height="9.2" rx=".9" fill="#fff"/></symbol>
+<symbol id="m-s-stop" viewBox="0 0 24 24"><use href="#m-stop"/></symbol>
+<symbol id="m-s-into" viewBox="0 0 24 24"><use href="#discS"/><path d="M13 8h4.2M13 10.8h4.2M13 13.6h4.2M13 16.4h4.2" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><path d="M10.6 6.6H8.2v7h2.6" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11.8l1.8 1.8-1.8 1.8" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="m-s-over" viewBox="0 0 24 24"><use href="#discS"/><path d="M13 8h4.2M13 10.8h4.2M13 13.6h4.2" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><path d="M10.6 6.6H8.2v10.2h2.6" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 15l1.8 1.8-1.8 1.8" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="m-s-return" viewBox="0 0 24 24"><use href="#discS"/><path d="M12 6.8h5.2M13 9.6h4.2M13 12.4h4.2" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><path d="M11 12.4H8.2v4.4h2.6" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 15l1.8 1.8-1.8 1.8" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="m-s-redo" viewBox="0 0 24 24"><use href="#discG"/><path d="M7.05 14.90A5.0 5.0 0 0 1 15.58 12.11" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><path d="M17.63 15.01L13.10 13.48 17.91 10.24z" fill="#fff" stroke="#fff" stroke-width="1" stroke-linejoin="round"/></symbol>
+<symbol id="m-s-undo" viewBox="0 0 24 24"><g transform="matrix(-1 0 0 1 24 0)"><use href="#m-s-redo"/></g></symbol>
+<symbol id="m-s-load" viewBox="0 0 24 24"><path d="M2.6 7.6a1 1 0 0 1 1-1h5.2l2 2h8.6a1 1 0 0 1 1 1V19a1 1 0 0 1-1 1H3.6a1 1 0 0 1-1-1z" fill="#e3b23a" stroke="#ad8019"/><path d="M3.2 20 5.8 12h16l-2.4 8z" fill="#f8d670" stroke="#ad8019" stroke-linejoin="round"/><path d="M16.4 10V3.6M13.8 6.2l2.6-2.6 2.6 2.6" fill="none" stroke="#3a9a4a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="m-s-save" viewBox="0 0 24 24"><path d="M3.5 5a1.5 1.5 0 0 1 1.5-1.5h11.6l3.9 3.9V19a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 19z" fill="#3c78c9" stroke="#24589e" stroke-linejoin="round"/><rect x="7" y="3.6" width="8.4" height="5.4" rx=".6" fill="#e7eef8"/><rect x="12.2" y="4.4" width="2" height="3.6" rx=".4" fill="#3c78c9"/><rect x="6.4" y="12" width="11.2" height="8.4" rx=".8" fill="#fff"/><path d="M8.4 14.6h7.2M8.4 17.2h7.2" stroke="#b4c4d8" stroke-width="1.2" stroke-linecap="round"/></symbol>
+<symbol id="m-s-search" viewBox="0 0 24 24"><circle cx="10.4" cy="10.4" r="5.8" fill="#e6f2fb" stroke="#62778c" stroke-width="2"/><path d="M8 8.4a3 3 0 0 1 2.4-1.2" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/><path d="M14.7 14.7l5 5" stroke="#b9894a" stroke-width="3.2" stroke-linecap="round"/></symbol>
+
+<!-- small query buttons (24, shown at 21) -->
+<symbol id="m-q-start" viewBox="0 0 24 24"><use href="#discS"/><path d="M8.4 7.6v8.8" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><path d="M11.4 7.6 17 12l-5.6 4.4z" fill="#fff" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/></symbol>
+<symbol id="m-q-commit" viewBox="0 0 24 24"><use href="#discS"/><path d="M7.4 12.4l3.3 3.3 6-7" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="m-q-rollback" viewBox="0 0 24 24"><use href="#discS"/><circle cx="12" cy="12" r="5" fill="none" stroke="#fff" stroke-width="2.3"/><path d="M8.6 15.4l6.8-6.8" stroke="#fff" stroke-width="2.3" stroke-linecap="round"/></symbol>
+<symbol id="m-q-explain" viewBox="0 0 24 24"><use href="#discG"/><path d="M10.6 5.2 6.4 11.4h2.8l-.9 4.8 4.4-6.6H9.9z" fill="#fff" stroke="#fff" stroke-width=".5" stroke-linejoin="round"/><path d="M13.2 11.6a2.1 2.1 0 1 1 3.1 1.9c-.7.4-1.1.8-1.1 1.6v.4" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/><circle cx="15.2" cy="17.6" r="1.1" fill="#fff"/></symbol>
+<symbol id="m-q-compare" viewBox="0 0 24 24"><use href="#discG"/><path d="M9.6 5 6 10.2h2.4l-.8 4 3.8-5.6H9z" fill="#fff" stroke="#fff" stroke-width=".5" stroke-linejoin="round"/><path d="M15.6 9.8 12 15h2.4l-.8 4 3.8-5.6H15z" fill="#fff" stroke="#fff" stroke-width=".5" stroke-linejoin="round"/><path d="M15.8 5.8 8.2 18.2" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/></symbol>
+
+<!-- result set bar (16) -->
+<symbol id="m-r-edit" viewBox="0 0 16 16"><path d="M10.9 2.6l2.5 2.5-7.6 7.6-3.2.7.7-3.2z" fill="#39424c" stroke="#39424c" stroke-width=".6" stroke-linejoin="round"/><path d="M9.6 3.9l2.5 2.5" stroke="#fff" stroke-width=".9"/></symbol>
+<symbol id="m-r-apply" viewBox="0 0 16 16"><path d="M2.8 8.6l3.4 3.4 7-7.6" fill="none" stroke="#39424c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="m-r-discard" viewBox="0 0 16 16"><path d="M3.8 3.8l8.4 8.4M12.2 3.8l-8.4 8.4" stroke="#39424c" stroke-width="2.2" stroke-linecap="round"/></symbol>
+<symbol id="m-r-first" viewBox="0 0 16 16"><path d="M3.6 3.4v9.2" stroke="#39424c" stroke-width="1.8" stroke-linecap="round"/><path d="M12.4 3.6v8.8L5.6 8z" fill="#39424c" stroke="#39424c" stroke-width="1" stroke-linejoin="round"/></symbol>
+<symbol id="m-r-last" viewBox="0 0 16 16"><g transform="matrix(-1 0 0 1 16 0)"><use href="#m-r-first"/></g></symbol>
+<symbol id="m-r-search" viewBox="0 0 16 16"><circle cx="9.4" cy="6.6" r="3.8" fill="none" stroke="#39424c" stroke-width="1.8"/><path d="M6.6 9.4 3 13" stroke="#39424c" stroke-width="2.2" stroke-linecap="round"/></symbol>
+
+<!-- schema tree (16) -->
+<symbol id="m-t-schema" viewBox="0 0 16 16"><path d="M2.6 3.8v8.2c0 1.3 2.4 2.4 5.4 2.4s5.4-1.1 5.4-2.4V3.8" fill="url(#gGold)" stroke="#a87810"/><path d="M2.6 7.9c0 1.3 2.4 2.4 5.4 2.4s5.4-1.1 5.4-2.4" fill="none" stroke="#a87810" stroke-width=".9"/><ellipse cx="8" cy="3.8" rx="5.4" ry="2.2" fill="#fbe7a6" stroke="#a87810"/></symbol>
+<symbol id="m-t-table" viewBox="0 0 16 16"><rect x="1.5" y="2" width="13" height="12" rx="1.4" fill="#edf3fb" stroke="#3f6fc0"/><path d="M1.5 3.4A1.4 1.4 0 0 1 2.9 2h10.2a1.4 1.4 0 0 1 1.4 1.4V5h-13z" fill="#3f6fc0"/><path d="M5.8 5.6v7.8M10.2 5.6v7.8" stroke="#9db6da" stroke-width="1.6"/></symbol>
+<symbol id="m-t-view" viewBox="0 0 16 16"><rect x="1" y="1.5" width="9.5" height="8" rx="1" fill="#edf3fb" stroke="#3f6fc0"/><path d="M1 2.5a1 1 0 0 1 1-1h7.5a1 1 0 0 1 1 1V4H1z" fill="#3f6fc0"/><rect x="5.5" y="6.5" width="9.5" height="8" rx="1" fill="#edf3fb" stroke="#3f6fc0"/><path d="M5.5 7.5a1 1 0 0 1 1-1H14a1 1 0 0 1 1 1V9H5.5z" fill="#3f6fc0"/></symbol>
+<symbol id="m-t-sp" viewBox="0 0 16 16"><rect x="1.5" y="2" width="13" height="12" rx="1.4" fill="#edf3fb" stroke="#3f6fc0"/><path d="M1.5 3.4A1.4 1.4 0 0 1 2.9 2h10.2a1.4 1.4 0 0 1 1.4 1.4V5h-13z" fill="#3f6fc0"/><rect x="3.2" y="6.4" width="3" height="3" rx=".5" fill="#fff" stroke="#2457b0" stroke-width="1.1"/><rect x="9.4" y="9.8" width="3" height="3" rx=".5" fill="#fff" stroke="#2457b0" stroke-width="1.1"/><path d="M6.2 7.9h4.7v1.9" fill="none" stroke="#d9534f" stroke-width="1.1"/></symbol>
+<symbol id="m-t-column" viewBox="0 0 16 16"><path d="M8 3.2 12.8 8 8 12.8 3.2 8z" fill="#45c0c8" stroke="#1d8b93" stroke-linejoin="round"/></symbol>
+<symbol id="m-t-fk" viewBox="0 0 16 16"><path d="M8 3.2 12.8 8 8 12.8 3.2 8z" fill="#e5585b" stroke="#a5272b" stroke-linejoin="round"/></symbol>
+<symbol id="m-t-pk" viewBox="0 0 16 16"><circle cx="8" cy="5" r="3.4" fill="url(#gGold)" stroke="#a87810"/><circle cx="8" cy="4.4" r="1.1" fill="#fff" stroke="#a87810" stroke-width=".7"/><path d="M7 8.2h2v6.2L8 15.3l-1-.9z" fill="url(#gGold)" stroke="#a87810" stroke-linejoin="round"/><path d="M9 11h1.5M9 13h1.2" stroke="#a87810" stroke-width="1.1"/></symbol>
+<symbol id="m-t-index" viewBox="0 0 16 16"><rect x="1.5" y="2" width="13" height="12" rx="1.4" fill="#edf3fb" stroke="#3f6fc0"/><path d="M1.5 3.4A1.4 1.4 0 0 1 2.9 2h10.2a1.4 1.4 0 0 1 1.4 1.4V5h-13z" fill="#3f6fc0"/><circle cx="7" cy="8.6" r="2.4" fill="#fff" stroke="#62778c" stroke-width="1.2"/><path d="M8.8 10.4l2.8 2.6" stroke="#b9894a" stroke-width="1.8" stroke-linecap="round"/></symbol>
+
+<!-- tab sheet icons (13) and perspective (17) -->
+<symbol id="m-tab-rs" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#2b3138"/><path d="M8.9 3.4 5.3 8.7h2.3l-.7 3.9 3.8-5.4H8.3z" fill="#fff"/></symbol>
+<symbol id="m-tab-script" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#2b3138"/><path d="M7.4 5.2h4.2M7.4 8h4.2M7.4 10.8h4.2" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/><path d="M4.4 6.2 6.2 8l-1.8 1.8z" fill="#fff"/></symbol>
+<symbol id="m-p-browser" viewBox="0 0 16 16"><rect x="1" y="1.5" width="14" height="13" rx="1.4" fill="#edf3fb" stroke="#3f6fc0"/><path d="M1 2.9a1.4 1.4 0 0 1 1.4-1.4h11.2A1.4 1.4 0 0 1 15 2.9v1.3H1z" fill="#3f6fc0"/><path d="M9.2 5.4 5.6 10h2.3l-.8 3.4 3.8-4.8H8.6z" fill="#2f9a45"/></symbol>
+<symbol id="m-p-scripts" viewBox="0 0 16 16"><rect x="1" y="1.5" width="14" height="13" rx="1.4" fill="#edf3fb" stroke="#3f6fc0"/><path d="M1 2.9a1.4 1.4 0 0 1 1.4-1.4h11.2A1.4 1.4 0 0 1 15 2.9v1.3H1z" fill="#3f6fc0"/><path d="M7.4 6.4h5.2M7.4 8.8h5.2M7.4 11.2h5.2" stroke="#7d8896" stroke-width="1.2" stroke-linecap="round"/><path d="M3.6 7.2 5.8 8.8l-2.2 1.6z" fill="#2457b0"/></symbol>
+
+<!-- options categories (48) -->
+<symbol id="m-o-browser" viewBox="0 0 48 48"><path d="M19.5 3h17l-9 14.5h12.5L12.5 46l8.5-18.5H8.5z" fill="url(#gBlue)" stroke="#16679a" stroke-width="1.6" stroke-linejoin="round"/><path d="M19.5 3h6L14.5 27.5h-6z" fill="#fff" opacity=".3"/></symbol>
+<symbol id="m-o-general" viewBox="0 0 48 48"><rect x="10" y="6.5" width="28" height="37" rx="2.6" fill="#fff" stroke="#6e8bb0" stroke-width="1.6"/><path d="M10 9.1a2.6 2.6 0 0 1 2.6-2.6h22.8A2.6 2.6 0 0 1 38 9.1V12H10z" fill="#dfe8f3"/><g fill="none" stroke="#7d8896" stroke-width="1.6" stroke-linecap="round"><path d="M14.5 3.5v5M19.5 3.5v5M24.5 3.5v5M29.5 3.5v5M34 3.5v5"/></g><g stroke="#3f6fc0" stroke-width="1.5" fill="#fff"><rect x="14.5" y="17" width="5.5" height="5.5" rx="1.2"/><rect x="14.5" y="26" width="5.5" height="5.5" rx="1.2"/><rect x="14.5" y="35" width="5.5" height="5.5" rx="1.2"/></g><path d="M15.6 19.8l1.5 1.5 2.6-3" fill="none" stroke="#3f6fc0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><g stroke="#a9b8cb" stroke-width="2" stroke-linecap="round"><path d="M23.5 19.8h10M23.5 28.8h8M23.5 37.8h9"/></g></symbol>
+<symbol id="m-o-connections" viewBox="0 0 48 48"><rect x="19.5" y="4" width="19" height="29" rx="2.6" fill="url(#gServer)" stroke="#5b5ea6" stroke-width="1.6"/><path d="M24 9.5h10M24 13h10M24 16.5h10" stroke="#6c6fb5" stroke-width="1.6" stroke-linecap="round"/><circle cx="34" cy="28" r="1.3" fill="#3ec46d"/><path d="M29 33v5" stroke="#8c94a0" stroke-width="2.2"/><path d="M6 41.5h36" stroke="#9aa3ae" stroke-width="3" stroke-linecap="round"/><rect x="25.5" y="37" width="7" height="8" rx="1.2" fill="#f2b544" stroke="#b5861c" stroke-width="1.2"/><circle cx="15" cy="24" r="7.6" fill="none" stroke="#6c6fb5" stroke-width="3.6" stroke-dasharray="2.7 2.27"/><circle cx="15" cy="24" r="6.2" fill="#9295d3" stroke="#5b5ea6" stroke-width="1.2"/><circle cx="15" cy="24" r="2.3" fill="#fff"/><circle cx="9.5" cy="15.5" r="4.4" fill="#fff" stroke="#3a9a4a" stroke-width="1.4"/><path d="M8.3 13.3l3.4 2.2-3.4 2.2z" fill="#3a9a4a"/></symbol>
+<symbol id="m-o-editors" viewBox="0 0 48 48"><rect x="6.5" y="9" width="27" height="32" rx="2.4" fill="#eaf4fb" stroke="#3e8dc2" stroke-width="3"/><g transform="translate(19 34.5) rotate(-42)"><path d="M0 0l5.2-2.9v5.8z" fill="#f3d6a6" stroke="#9a7a4c" stroke-width=".8" stroke-linejoin="round"/><path d="M0 0l1.9-1.05v2.1z" fill="#39424c"/><rect x="5.2" y="-2.9" width="19" height="5.8" fill="#4f9fd6" stroke="#2a6f9f" stroke-width=".8"/><rect x="24.2" y="-2.9" width="2.6" height="5.8" fill="#c9d2db" stroke="#7d8896" stroke-width=".8"/><rect x="26.8" y="-2.9" width="4.2" height="5.8" rx="1.4" fill="#e5585b" stroke="#a5272b" stroke-width=".8"/></g></symbol>
+
+<!-- message dialogs (48) -->
+<symbol id="m-d-warning" viewBox="0 0 48 48"><path d="M21.4 6.5a3 3 0 0 1 5.2 0l17 30a3 3 0 0 1-2.6 4.5H7a3 3 0 0 1-2.6-4.5z" fill="#f7c948" stroke="#c48f14" stroke-width="2" stroke-linejoin="round"/><path d="M24 17v11" stroke="#2e3338" stroke-width="4.4" stroke-linecap="round"/><circle cx="24" cy="34.5" r="2.6" fill="#2e3338"/></symbol>
+<symbol id="m-d-error" viewBox="0 0 48 48"><circle cx="24" cy="24" r="19" fill="url(#gRed)" stroke="#9e2a22" stroke-width="2"/><path d="M17 17l14 14M31 17 17 31" stroke="#fff" stroke-width="5" stroke-linecap="round"/></symbol>
+<symbol id="m-d-info" viewBox="0 0 48 48"><path d="M24 5c10.8 0 19 6.9 19 15.5S34.8 36 24 36h-.6L17 43l.6-7.7C10 33.6 5 27.6 5 20.5 5 11.9 13.2 5 24 5z" fill="url(#gBubble)" stroke="#5d8fc9" stroke-width="2" stroke-linejoin="round"/><circle cx="24" cy="12.6" r="2.6" fill="#2a5fae"/><path d="M20.5 17.6H25v11.6M20.5 29.2h8" fill="none" stroke="#2a5fae" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="m-d-confirm" viewBox="0 0 48 48"><path d="M24 5c10.8 0 19 6.9 19 15.5S34.8 36 24 36h-.6L17 43l.6-7.7C10 33.6 5 27.6 5 20.5 5 11.9 13.2 5 24 5z" fill="url(#gBubble)" stroke="#5d8fc9" stroke-width="2" stroke-linejoin="round"/><path d="M18.8 15.2a5.3 5.3 0 1 1 7.6 4.8c-1.6.8-2.4 1.8-2.4 3.6v1" fill="none" stroke="#2a5fae" stroke-width="3.6" stroke-linecap="round"/><circle cx="24" cy="30" r="2.5" fill="#2a5fae"/></symbol>
+
+<!-- small +/- buttons (16) -->
+<symbol id="m-mini-add" viewBox="0 0 16 16"><rect x="1.5" y="1.5" width="13" height="13" rx="2.4" fill="#eef0f3" stroke="#9aa3ae"/><path d="M8 4.8v6.4M4.8 8h6.4" stroke="#39424c" stroke-width="1.8" stroke-linecap="round"/></symbol>
+<symbol id="m-mini-del" viewBox="0 0 16 16"><rect x="1.5" y="1.5" width="13" height="13" rx="2.4" fill="#eef0f3" stroke="#9aa3ae"/><path d="M4.8 8h6.4" stroke="#39424c" stroke-width="1.8" stroke-linecap="round"/></symbol>
+</svg>
+
+<main class="wrap">
+  <header style="display:grid;gap:12px">
+    <div class="eyebrow">QueryMole · Designvorschlag · Branch design/modern-icons</div>
+    <h1>Moderne Symbole, gleiche Gestalt</h1>
+    <p class="lead">Jedes Symbol des Originals wird neu gezeichnet, behält aber Form, Farbe und Motiv. Wer den MySQL Query Browser kennt, findet jeden Knopf an derselben Stelle und erkennt ihn auf den ersten Blick. Weg fallen Glanzlichter, Schlagschatten und der Pixelraster von 2005.</p>
+  </header>
+
+  <section>
+    <h2>Regeln für die Neuzeichnung</h2>
+    <div class="rules">
+      <div class="rule"><h3>Form und Farbcode bleiben</h3><p>Runde Knöpfe bleiben rund. Grün heißt Ausführen und Navigieren, Schiefergrau steht für Skript und Transaktion, das rote Achteck mit „STOP“ bleibt ein Stoppschild.</p></div>
+      <div class="rule"><h3>Motive bleiben</h3><p>Blitz, Ordner mit Pfeil, Diskette, Lupe, gelbe Datenbank-Tonne, Schlüssel für den Primärschlüssel, Rauten für Spalten. Nichts wird gegen ein abstraktes Symbol getauscht. Einzige Ausnahme: wo der Blitz als Logo stand, steht der Maulwurf (ADR-0033). Als „Ausführen“ bleibt der Blitz.</p></div>
+      <div class="rule"><h3>Flach statt Glas</h3><p>Ein leichter Verlauf statt Glanzlicht, eine Kontur statt Schlagschatten, einheitliche runde Strichenden. Die Glyphen werden größer und lesbarer.</p></div>
+      <div class="rule"><h3>Vektor, für jede Skalierung</h3><p>SVG-Vorlagen werden beim Build zu PNGs in 100, 125, 150 und 200 % gerendert (ADR-0009, Schritt 3). Zur Laufzeit gibt es keine SVG-Bibliothek.</p></div>
+      <div class="rule"><h3>Optional, klassisch bleibt Standard</h3><p>Eine Einstellung „Moderne Symbole“ in den Optionen, standardmäßig aus (ADR-0047). Ausgeschaltet sieht alles aus wie im Original.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:end">
+      <h2>So sieht es im Programm aus</h2>
+      <div class="controls">
+        <span class="lbl">Bildschirm-Skalierung</span>
+        <div class="seg" role="group" aria-label="Skalierung">
+          <button id="z1" data-z="1" aria-pressed="true">100 %</button>
+          <button id="z15" data-z="1.5" aria-pressed="false">150 %</button>
+          <button id="z2" data-z="2" aria-pressed="false">200 %</button>
+        </div>
+        <div class="seg" role="group" aria-label="Zustand">
+          <button id="sOn" data-state="on" aria-pressed="true">aktiv</button>
+          <button id="sOff" data-state="off" aria-pressed="false">deaktiviert</button>
+        </div>
+      </div>
+    </div>
+    <p class="note">Bei 150 und 200 % werden die klassischen PNGs vom System hochskaliert und verschwimmen; die neuen Symbole bleiben scharf. „Deaktiviert“ zeigt den Zustand ohne Verbindung.</p>
+
+    <h3>Haupt-Werkzeugleiste</h3>
+    <div class="cmp" id="mainTb"></div>
+    <h3>Skript-Werkzeugleiste</h3>
+    <div class="cmp" id="scriptTb"></div>
+    <h3>Ergebnisleiste und Schema-Baum</h3>
+    <div class="cmp" id="rsTree"></div>
+    <h3>Optionen-Dialog</h3>
+    <div class="cmp" id="optDlg"></div>
+  </section>
+
+  <section>
+    <h2>Alle Symbole im Vergleich</h2>
+    <p class="note">Links das Original, rechts der Vorschlag, jeweils in Originalgröße auf der Fensterfarbe des Programms. Die Skalierung oben gilt auch hier.</p>
+    <div id="groups" style="display:grid;gap:16px"></div>
+  </section>
+
+  <section class="next">
+    <h2>Offene Fragen und nächste Schritte</h2>
+    <ol>
+      <li><b>Richtung bestätigt</b> (22.11.2026). Nachgebessert: Pfeile in „Go back“/„Next“ mittig, Pfeilspitzen bei Refresh, Undo und Redo als gefüllte Spitzen entlang des Bogens, Maulwurf statt Blitz bei „Browser“.</li>
+      <li><b>ADR schreiben</b> („Modern icon set, off by default“), Nachfolger von Schritt 3 aus ADR-0009, mit diesem Vorschlag als Mock-up.</li>
+      <li><b>Restliche Symbole zeichnen:</b> Der Vorschlag deckt die sichtbarsten rund 60 von etwa 240 Bildern ab. Es fehlen u. a. Cursor, Feld-Overlays, Tab-Schließknöpfe, Animationen und die Datentyp-Symbole.</li>
+      <li><b>Build:</b> SVG-Vorlagen unter <code>assets/icons-modern/</code>, ein Skript rendert sie in die Größen und legt sie als zweite Ressourcendatei neben die klassischen. <code>PNGTools</code> wählt anhand der Einstellung und des DPI-Faktors.</li>
+      <li><b>Prüfen:</b> Screenshots beider Sätze unter Windows und Qt6 sowie bei 100/150/200 %.</li>
+    </ol>
+  </section>
+</main>
+
+<script>
+const ORIG = /*ORIG*/{};
+const MOLE = /*MOLE*/"";
+
+// [original PNG, modern symbol, label, base size in px (CSS px at 100 %)]
+const GROUPS = [
+  { t: "Abfrage-Werkzeugleiste", n: "Runde Knöpfe 27×29 mit Schatten; neu 24 px ohne Schatten in derselben Fläche.", px: 24, box: [27, 29], items: [
+    ["query_back", "m-back", "Go back"], ["query_next", "m-next", "Next"], ["query_refresh", "m-refresh", "Refresh"],
+    ["query_execute", "m-execute", "Execute"], ["query_stop", "m-stop", "Stop"] ] },
+  { t: "Skript-Werkzeugleiste", n: "Grün für Ausführen und Rückgängig, Schiefergrau für Debugger-Schritte.", px: 24, box: [27, 29], items: [
+    ["script_execute", "m-s-execute", "Execute"], ["script_continue", "m-s-continue", "Continue"], ["script_pause", "m-s-pause", "Pause"],
+    ["script_stop", "m-s-stop", "Stop"], ["script_step_into", "m-s-into", "Step into"], ["script_step_over", "m-s-over", "Step over"],
+    ["script_step_return", "m-s-return", "Step out"], ["script_load", "m-s-load", "Load"], ["script_save", "m-s-save", "Save"],
+    ["script_undo", "m-s-undo", "Undo"], ["script_redo", "m-s-redo", "Redo"], ["script_search", "m-s-search", "Search"] ] },
+  { t: "Kleine Abfrage-Knöpfe (erweiterte Werkzeugleiste)", n: "24×26 im Original, neu 21 px.", px: 21, box: [24, 26], items: [
+    ["small_query_start", "m-q-start", "Start transaction"], ["small_query_commit", "m-q-commit", "Commit"], ["small_query_rollback", "m-q-rollback", "Rollback"],
+    ["small_query_explain", "m-q-explain", "Explain"], ["small_query_compare", "m-q-compare", "Compare"] ] },
+  { t: "Ergebnisleiste", n: "Schon im Original einfarbig; neu nur einheitliche Strichstärke und weichere Enden.", px: 16, items: [
+    ["rs_edit", "m-r-edit", "Edit"], ["rs_apply", "m-r-apply", "Apply Changes"], ["rs_discard", "m-r-discard", "Discard Changes"],
+    ["rs_first", "m-r-first", "First"], ["rs_last", "m-r-last", "Last"], ["rs_search", "m-r-search", "Search"] ] },
+  { t: "Schema-Baum und Spalten", n: "Gelbe Tonne, blaue Fenster, Rauten und Schlüssel bleiben; ohne Treppenkanten.", px: 16, items: [
+    ["myx_schema_16x16", "m-t-schema", "Schema"], ["myx_schema_table_16x16", "m-t-table", "Table"], ["myx_schema_view_16x16", "m-t-view", "View"],
+    ["myx_schema_sp_16x16", "m-t-sp", "Procedure"], ["column", "m-t-column", "Column"], ["column_pk", "m-t-pk", "Primary key"],
+    ["column_fk", "m-t-fk", "Foreign key"], ["asset_index_16x16", "m-t-index", "Index"] ] },
+  { t: "Registerkarten und Ansichten", n: "Kleine Symbole auf den Ergebnis- und Skript-Registern.", px: 16, items: [
+    ["tabsheet_icon_resultset", "m-tab-rs", "Resultset tab", 13], ["tabsheet_icon_script", "m-tab-script", "Script tab", 13],
+    ["perspective_browser", "m-p-browser", "Browser", 17], ["perspective_scripts", "m-p-scripts", "Scripts", 17],
+    ["mini_add", "m-mini-add", "Add"], ["mini_del", "m-mini-del", "Remove"] ] },
+  { t: "Optionen-Kategorien", n: "48 px. Der Blitz bei „Browser“ war das Logo des Originals; wie überall seit ADR-0033 steht dort jetzt der Maulwurf (aus der 304-px-Vorlage, also auch bei 200 % scharf). Der neu gezeichnete Blitz bleibt als Variante.", px: 48, big: true, items: [
+    ["options_querybrowser", "img:mole", "Browser (QueryMole)"], ["options_general", "m-o-general", "General Options"],
+    ["options_connections", "m-o-connections", "Connections"], ["options_editors", "m-o-editors", "Editors"],
+    ["options_querybrowser", "m-o-browser", "Browser (Variante Blitz)"] ] },
+  { t: "Meldungsdialoge", n: "46 px im Original; die Sprechblasen für Information und Frage bleiben.", px: 46, big: true, items: [
+    ["messagedlg_information", "m-d-info", "Information"], ["messagedlg_confirmation", "m-d-confirm", "Confirmation"],
+    ["messagedlg_warning", "m-d-warning", "Warning"], ["messagedlg_error", "m-d-error", "Error"] ] },
+];
+
+let Z = 1;
+const esc = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+function orig(name, w, h) {
+  const o = ORIG[name]; if (!o) return `<span title="${esc(name)} fehlt">?</span>`;
+  const ww = (w || o.w) * Z, hh = (h || o.h) * Z;
+  return `<img class="ico" src="${o.src}" width="${ww}" height="${hh}" alt="${esc(name)}">`;
+}
+function modern(sym, px) {
+  const s = px * Z;
+  if (sym === "img:mole") { const m = Math.round(s * 0.92); return `<span style="display:grid;place-items:center;width:${s}px;height:${s}px"><img class="ico" src="${MOLE}" width="${m}" height="${m}" alt="QueryMole"></span>`; }
+  return `<svg class="ico" width="${s}" height="${s}" aria-hidden="true"><use href="#${sym}" width="${s}" height="${s}"/></svg>`;
+}
+
+function renderGroups() {
+  document.getElementById("groups").innerHTML = GROUPS.map(g => `
+    <div class="grp ${g.big ? "big" : ""}">
+      <header><h3>${esc(g.t)}</h3><p>${esc(g.n)}</p></header>
+      <div class="cells">${g.items.map(([o, m, l, px]) => {
+        const size = px || g.px, oo = ORIG[o] || { w: size, h: size };
+        const slot = Math.max(oo.h, size);
+        return `<div class="cell" style="--px:${slot}"><div class="slot">${orig(o)}</div><div class="slot">${modern(m, size)}</div><div class="name">${esc(l)}</div></div>`;
+      }).join("")}</div>
+    </div>`).join("");
+}
+
+function tbtn(icon, label, small) { return `<div class="tbtn"><div class="box ${small ? "s" : ""}">${icon}</div>${label ? `<span>${esc(label)}</span>` : ""}</div>`; }
+function pair(id, build) {
+  document.getElementById(id).innerHTML =
+    `<div><span class="tag">Original</span>${build(true)}</div><div><span class="tag">Vorschlag</span>${build(false)}</div>`;
+}
+function icon(classic, o, m, px) { return classic ? orig(o) : modern(m, px); }
+
+function renderMocks() {
+  const off = document.getElementById("sOff").getAttribute("aria-pressed") === "true";
+  const dis = off ? "disabled" : "";
+  pair("mainTb", c => `<div class="win ${dis}"><div class="tb">
+    ${tbtn(icon(c, "query_back", "m-back", 24), "Go back")}${tbtn(icon(c, "query_next", "m-next", 24), "Next")}${tbtn(icon(c, "query_refresh", "m-refresh", 24), "Refresh")}
+    <div class="sqlbox"></div>
+    ${tbtn(icon(c, "query_execute", "m-execute", 24), "Execute")}${tbtn(icon(c, "query_stop", "m-stop", 24), "Stop")}
+  </div></div>`);
+  pair("scriptTb", c => `<div class="win ${dis}"><div class="tb">
+    ${tbtn(icon(c, "script_load", "m-s-load", 24), "Load")}${tbtn(icon(c, "script_save", "m-s-save", 24), "Save")}<div class="sep"></div>
+    ${tbtn(icon(c, "script_execute", "m-s-execute", 24), "Execute")}${tbtn(icon(c, "script_continue", "m-s-continue", 24), "Continue")}
+    ${tbtn(icon(c, "script_step_over", "m-s-over", 24), "Step")}${tbtn(icon(c, "script_pause", "m-s-pause", 24), "Pause")}${tbtn(icon(c, "script_stop", "m-s-stop", 24), "Stop")}
+  </div></div>`);
+  pair("rsTree", c => `<div class="win ${dis}">
+    <div class="tree">
+      <div class="r">${icon(c, "myx_schema_16x16", "m-t-schema", 16)}<b>sakila</b></div>
+      <div class="r" style="padding-left:${16 * Z}px">${icon(c, "myx_schema_table_16x16", "m-t-table", 16)}actor</div>
+      <div class="r" style="padding-left:${32 * Z}px">${icon(c, "column_pk", "m-t-pk", 16)}actor_id</div>
+      <div class="r" style="padding-left:${32 * Z}px">${icon(c, "column", "m-t-column", 16)}first_name</div>
+      <div class="r" style="padding-left:${16 * Z}px">${icon(c, "myx_schema_view_16x16", "m-t-view", 16)}actor_info</div>
+      <div class="r" style="padding-left:${16 * Z}px">${icon(c, "myx_schema_sp_16x16", "m-t-sp", 16)}film_in_stock</div>
+    </div>
+    <div class="rbar">
+      <div class="rbtn">${icon(c, "rs_edit", "m-r-edit", 16)}Edit</div><div class="rbtn">${icon(c, "rs_apply", "m-r-apply", 16)}Apply Changes</div>
+      <div class="rbtn">${icon(c, "rs_discard", "m-r-discard", 16)}Discard</div><div class="rbtn">${icon(c, "rs_first", "m-r-first", 16)}First</div>
+      <div class="rbtn">${icon(c, "rs_last", "m-r-last", 16)}Last</div><div class="rbtn">${icon(c, "rs_search", "m-r-search", 16)}Search</div>
+    </div></div>`);
+  pair("optDlg", c => `<div class="win"><div class="opt">
+    <div class="cat"><div class="hd">Category</div>
+      <div class="it sel">${icon(c, "options_querybrowser", "img:mole", 48)}<span>Browser</span></div>
+      <div class="it">${icon(c, "options_general", "m-o-general", 48)}<span>General Options</span></div>
+      <div class="it">${icon(c, "options_connections", "m-o-connections", 48)}<span>Connections</span></div>
+      <div class="it">${icon(c, "options_editors", "m-o-editors", 48)}<span>Editors</span></div>
+    </div>
+    <div class="page"><div class="ph">Browser</div><div class="ln"></div><div class="ln w"></div><div class="ln"></div><div class="ln w"></div><div class="ln"></div></div>
+  </div></div>`);
+}
+
+function render() { document.documentElement.style.setProperty("--z", Z); renderMocks(); renderGroups(); }
+function seg(sel, attr, fn) {
+  document.querySelectorAll(sel).forEach(b => b.addEventListener("click", () => {
+    b.parentElement.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
+    fn(b.dataset[attr]); render();
+  }));
+}
+seg("[data-z]", "z", v => { Z = parseFloat(v); });
+seg("[data-state]", "state", () => {});
+render();
+</script>

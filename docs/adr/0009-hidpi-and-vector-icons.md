@@ -1,6 +1,6 @@
 # ADR-0009 — HiDPI scaling and vector icons come after functional parity
 
-- Status: Proposed (deferred until functional parity)
+- Status: Proposed (deferred until functional parity); step 3 superseded by ADR-0053
 - Date: 2026-10-08
 - Deciders: Harald Lapp (project owner)
 

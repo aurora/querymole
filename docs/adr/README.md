@@ -17,7 +17,7 @@ Related.
 | [0006](0006-generated-pascal-interface-layer-with-original-names.md) | Generate the Pascal interface layer under the original unit and type names | Accepted |
 | [0007](0007-replace-third-party-delphi-libraries.md) | Replace third-party Delphi libraries with LCL equivalents and thin shims | Accepted |
 | [0008](0008-ui-fidelity-via-dfm-conversion-and-screenshots.md) | UI fidelity: convert the DFMs, review by screenshots | Accepted; reference screenshots outstanding |
-| [0009](0009-hidpi-and-vector-icons.md) | HiDPI scaling and vector icons come after functional parity | Proposed (deferred) |
+| [0009](0009-hidpi-and-vector-icons.md) | HiDPI scaling and vector icons come after functional parity | Proposed (deferred); step 3 superseded by ADR-0053 |
 | [0010](0010-multi-database-support-via-driver-seam.md) | Other RDBMS (PostgreSQL) via a driver seam, after parity | Proposed (design seam only) |
 | [0011](0011-license-gpl-2-or-later.md) | License: GPL-2.0-or-later, as the original | Accepted |
 | [0012](0012-sql-editor-compatibility-layer-over-synedit.md) | SQL editor: a UniCodeEditor-compatible layer over SynEdit | Accepted; visual review outstanding |
@@ -61,6 +61,7 @@ Related.
 | [0050](0050-csv-export-options-and-tsv.md) | CSV export options and a TSV export format | Proposed (implemented; Windows build not checked) |
 | [0051](0051-connection-manager-test-button-and-groups.md) | Connection manager: a test button and groups of connections | Proposed |
 | [0052](0052-connect-animation-start-without-connection-automatic-update-check.md) | Connect animation, starting without a connection, automatic update check | Proposed |
+| [0053](0053-modern-icon-set-off-by-default.md) | A modern icon set, redrawn from the original's shapes, off by default | Proposed (design confirmed; not built) |
 
 ## Numbering
 

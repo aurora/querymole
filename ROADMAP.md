@@ -152,7 +152,8 @@ default, in the original's style.
   header, BOM) and a TSV format in `LOAD DATA`'s format (ADR-0050). Candidates, each with its own ADR: SQL INSERT
   statements, Markdown table, real XLSX. Open: export while rows still load writes only those rows;
   the grid's fetch of large results is much slower than the backend's.
-- HiDPI scaling, then optional vector-rendered icon set (ADR-0009).
+- HiDPI scaling (ADR-0009, step 2); optional modern icon set redrawn from the original's shapes, off by default
+  (ADR-0053; design in `docs/mockups/modern-icons/`, about 50 of about 240 pictures drawn).
 - PostgreSQL, SQLite and SQL Server via a driver seam (ADR-0010); what is MySQL-specific today and a suggested order:
   `docs/multi-database-inventory.md` (2026-11-20). Candidate libraries: libpq, sqlite3, FreeTDS, or FPC's SQLDB.
 - Replace C pieces by Pascal behind that seam, SQL parser last (ADR-0003).
