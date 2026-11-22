@@ -155,9 +155,12 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure TntFormCloseQuery(Sender: TObject; var CanClose: Boolean);
 
-    // Port: fills the Window menu with the running instances, which are known on Windows only (AppInstanceMgmt)
+    // Port: fills the Window menu with the running instances (AppInstanceMgmt); the LCL sends no WM_INITMENUPOPUP
+    // outside Windows, there the menu item's OnClick, which the LCL calls when the submenu opens, does it.
     {$IFDEF MSWINDOWS}
     procedure WMInitMenuPopup(var MSG: TWMInitMenuPopup); message WM_INITMENUPOPUP;
+    {$ELSE}
+    procedure WindowMIClick(Sender: TObject);
     {$ENDIF}
   private
     FTextToClear: Boolean;
@@ -219,6 +222,9 @@ procedure TMainForm.FormCreate(Sender: TObject);
 
 begin
   InitForm(self);
+  {$IFNDEF MSWINDOWS}
+  WindowMI.OnClick := WindowMIClick;
+  {$ENDIF}
 
   if GetEnvironmentVariable('QBR_MENULOG') <> '' then
   begin
@@ -1235,6 +1241,12 @@ begin
     BuildRegisterApplicationMenuItems(WindowMI);
 
   inherited;
+end;
+{$ELSE}
+procedure TMainForm.WindowMIClick(Sender: TObject);
+
+begin
+  BuildRegisterApplicationMenuItems(WindowMI);
 end;
 {$ENDIF}
 

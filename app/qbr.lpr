@@ -230,6 +230,8 @@ begin
 
   if Res = 1 then
   begin
+    RegisterApplication(Application, MainForm.MySQLConn.GetConnectionCaption(False));
+    try
     MainForm.PrepareGUI;
     {$IFNDEF MSWINDOWS}AdjustMenuBar(MainForm);{$ENDIF}   // Port: see unit QtStyle (Qt6 only)
     Trace('gui prepared');
@@ -438,6 +440,9 @@ begin
       Exit;
     end;
     Application.Run;
+    finally
+      UnregisterApplication(Application);
+    end;
   end;
   except
     on E: Exception do
