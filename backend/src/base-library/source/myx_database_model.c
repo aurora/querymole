@@ -570,6 +570,32 @@ static void read_column_create_attributes(MYX_DBM_COLUMN_DATA *column, const cha
     }
   }
 
+  /* an expression as default, "DEFAULT (1 + 2)" (MySQL 8.0.13, MariaDB 10.2.1) or "DEFAULT uuid()" (MariaDB): SHOW FULL
+     COLUMNS reports its text like a string, and writing it back made it the literal '(1 + 2)' or broke the SQL */
+  p= find_keyword(def, end, "DEFAULT");
+  if(p)
+  {
+    p+= strlen("DEFAULT");
+    while(*p == ' ')
+      p++;
+    q= p;
+    while(q < end && (g_ascii_isalnum(*q) || *q == '_'))
+      q++;
+    if(*p == '(')
+      q= skip_parens(p);
+    else if(q > p && q < end && *q == '(' && g_ascii_strncasecmp(p, "CURRENT_TIMESTAMP", 17) != 0 &&
+      !g_ascii_isdigit(*p))
+      q= skip_parens(q);
+    else
+      q= NULL;
+    if(q)
+    {
+      g_free(column->default_value);
+      column->default_value= g_strndup(p, q - p);
+      column->default_value_is_null= 0;
+    }
+  }
+
   p= find_keyword(def, end, "ON UPDATE");
   if(p)
   {
@@ -1051,7 +1077,11 @@ MYX_DBM_TABLE_DATA * myx_dbm_retrieve_table_data(MYSQL *mysql, MYX_DBM_DATATYPES
               (g_ascii_strncasecmp(column->default_value, "CURRENT_TIMESTAMP", 17) != 0) &&
               !str_is_numeric(column->default_value))
             {
-              char *quoted_default= g_strdup_printf("'%s'", column->default_value);
+              /* revival: a quote or backslash in the default is escaped (it ended the literal) */
+              char *escaped= str_g_replace(str_g_replace(g_strdup(column->default_value), "\\", "\\\\"), "'", "''");
+              char *quoted_default= g_strdup_printf("'%s'", escaped);
+
+              g_free(escaped);
 
               g_free(column->default_value);
               column->default_value= quoted_default;

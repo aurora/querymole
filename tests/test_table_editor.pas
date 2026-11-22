@@ -58,6 +58,9 @@ type
     procedure TestFunctionalIndex;
     procedure TestEngineChange;
     procedure TestCharsets;
+    procedure TestEditIndices;
+    procedure TestEditForeignKeys;
+    procedure TestExpressionDefault;
   end;
 
 implementation
@@ -472,6 +475,165 @@ begin
     Exit;
   CheckTable('te_funcindex', 'id INT NOT NULL PRIMARY KEY, name VARCHAR(50) NOT NULL, KEY idx_lower ((LOWER(name)))',
     'ENGINE=InnoDB');
+end;
+
+// Editing indices as the editor's index page does (EditorTable.AddIndex, the column drag, removing, renaming): the
+// generated ALTER TABLE must give the same table as the plain statements on a twin.
+procedure TTableEditorTest.TestEditIndices;
+const
+  Body = 'id INT NOT NULL, a INT NOT NULL, b VARCHAR(50) NOT NULL, c INT NULL, PRIMARY KEY (id), ' +
+    'KEY idx_a (a), UNIQUE KEY uq_b (b)';
+var
+  Table, Twin: string;
+  Edited: TMYX_DBM_TABLE_DATA;
+  Index: TMYX_DBM_INDEX_DATA;
+  I: Integer;
+begin
+  Table := 'te_editidx';
+  Twin := Table + '_ref';
+  ExecSQL(FMy, 'CREATE TABLE ' + Table + ' (' + Body + ') ENGINE=InnoDB');
+  ExecSQL(FMy, 'CREATE TABLE ' + Twin + ' (' + Body + ') ENGINE=InnoDB');
+
+  // a new index
+  Edited := ReadTable(Table);
+  try
+    Index := TMYX_DBM_INDEX_DATA.Create('idx_c', '', MYX_DBM_IK_INDEX, MYX_DBM_IT_DEFAULT);
+    Index.columns.Add(TMYX_DBM_INDEX_COLUMN_DATA.Create('c', '', ''));
+    Edited.indices.Add(Index);
+    ApplyAndCompare(Table, Twin, 'a new index', DiffSQL(Table, Edited), 'ALTER TABLE ' + Twin + ' ADD INDEX idx_c (c)');
+  finally
+    Edited.Free;
+  end;
+
+  // a new unique index on two columns, the second with a prefix length
+  Edited := ReadTable(Table);
+  try
+    Index := TMYX_DBM_INDEX_DATA.Create('uq_ab', '', MYX_DBM_IK_UNIQUE, MYX_DBM_IT_DEFAULT);
+    Index.columns.Add(TMYX_DBM_INDEX_COLUMN_DATA.Create('a', '', ''));
+    Index.columns.Add(TMYX_DBM_INDEX_COLUMN_DATA.Create('b', '10', ''));
+    Edited.indices.Add(Index);
+    ApplyAndCompare(Table, Twin, 'a unique index with a prefix', DiffSQL(Table, Edited),
+      'ALTER TABLE ' + Twin + ' ADD UNIQUE INDEX uq_ab (a, b(10))');
+  finally
+    Edited.Free;
+  end;
+
+  // another column in an index
+  Edited := ReadTable(Table);
+  try
+    for I := 0 to Edited.indices.Count - 1 do
+      if Edited.indices[I].name = 'idx_a' then
+        Edited.indices[I].columns.Add(TMYX_DBM_INDEX_COLUMN_DATA.Create('c', '', ''));
+    ApplyAndCompare(Table, Twin, 'a column added to an index', DiffSQL(Table, Edited),
+      'ALTER TABLE ' + Twin + ' DROP INDEX idx_a, ADD INDEX idx_a (a, c)');
+  finally
+    Edited.Free;
+  end;
+
+  // a renamed index
+  Edited := ReadTable(Table);
+  try
+    for I := 0 to Edited.indices.Count - 1 do
+      if Edited.indices[I].name = 'idx_c' then
+        Edited.indices[I].name := 'idx_c_renamed';
+    ApplyAndCompare(Table, Twin, 'a renamed index', DiffSQL(Table, Edited),
+      'ALTER TABLE ' + Twin + ' DROP INDEX idx_c, ADD INDEX idx_c_renamed (c)');
+  finally
+    Edited.Free;
+  end;
+
+  // a removed index
+  Edited := ReadTable(Table);
+  try
+    for I := Edited.indices.Count - 1 downto 0 do
+      if Edited.indices[I].name = 'uq_b' then
+        Edited.indices.Delete(I);
+    ApplyAndCompare(Table, Twin, 'a removed index', DiffSQL(Table, Edited), 'ALTER TABLE ' + Twin + ' DROP INDEX uq_b');
+  finally
+    Edited.Free;
+  end;
+end;
+
+// Editing foreign keys as the editor's foreign key page does (EditorTable: a new key, its column mapping, the actions,
+// removing). The constraint names carry the table's name so that the twin's differ (they are unique per schema).
+procedure TTableEditorTest.TestEditForeignKeys;
+var
+  Parent, Table, Twin: string;
+  Edited: TMYX_DBM_TABLE_DATA;
+  FK: TMYX_DBM_FK_DATA;
+  I: Integer;
+begin
+  Parent := 'te_fkparent';
+  Table := 'te_editfk';
+  Twin := Table + '_ref';
+  ExecSQL(FMy, 'CREATE TABLE ' + Parent + ' (id INT NOT NULL PRIMARY KEY) ENGINE=InnoDB');
+  ExecSQL(FMy, 'CREATE TABLE ' + Table + ' (id INT NOT NULL PRIMARY KEY, pid INT NULL, qid INT NULL, KEY (pid), KEY (qid)) ' +
+    'ENGINE=InnoDB');
+  ExecSQL(FMy, 'CREATE TABLE ' + Twin + ' (id INT NOT NULL PRIMARY KEY, pid INT NULL, qid INT NULL, KEY (pid), KEY (qid)) ' +
+    'ENGINE=InnoDB');
+
+  // a new key with actions
+  Edited := ReadTable(Table);
+  try
+    FK := TMYX_DBM_FK_DATA.Create(Table + '_fk1', '', SchemaName, Parent, MYX_DBM_FA_CASCADE, MYX_DBM_FA_SET_NULL);
+    FK.column_mapping.Add(TMYX_NAME_VALUE_PAIR.Create('pid', 'id'));
+    Edited.fks.Add(FK);
+    ApplyAndCompare(Table, Twin, 'a new foreign key', DiffSQL(Table, Edited),
+      'ALTER TABLE ' + Twin + ' ADD CONSTRAINT ' + Twin + '_fk1 FOREIGN KEY (pid) REFERENCES ' + Parent +
+      ' (id) ON DELETE CASCADE ON UPDATE SET NULL');
+  finally
+    Edited.Free;
+  end;
+
+  // a second key without actions
+  Edited := ReadTable(Table);
+  try
+    FK := TMYX_DBM_FK_DATA.Create(Table + '_fk2', '', SchemaName, Parent, MYX_DBM_FA_NO_ACTION, MYX_DBM_FA_NO_ACTION);
+    FK.column_mapping.Add(TMYX_NAME_VALUE_PAIR.Create('qid', 'id'));
+    Edited.fks.Add(FK);
+    ApplyAndCompare(Table, Twin, 'a second foreign key', DiffSQL(Table, Edited),
+      'ALTER TABLE ' + Twin + ' ADD CONSTRAINT ' + Twin + '_fk2 FOREIGN KEY (qid) REFERENCES ' + Parent + ' (id)');
+  finally
+    Edited.Free;
+  end;
+
+  // another action on an existing key
+  Edited := ReadTable(Table);
+  try
+    for I := 0 to Edited.fks.Count - 1 do
+      if Edited.fks[I].name = Table + '_fk1' then
+        Edited.fks[I].on_delete := MYX_DBM_FA_RESTRICT;
+    // (a key of the same name cannot be dropped and added in one ALTER TABLE on the servers, so two statements here)
+    ExecSQL(FMy, 'ALTER TABLE ' + Twin + ' DROP FOREIGN KEY ' + Twin + '_fk1');
+    ApplyAndCompare(Table, Twin, 'another action', DiffSQL(Table, Edited),
+      'ALTER TABLE ' + Twin + ' ADD CONSTRAINT ' + Twin +
+      '_fk1 FOREIGN KEY (pid) REFERENCES ' + Parent + ' (id) ON DELETE RESTRICT ON UPDATE SET NULL');
+  finally
+    Edited.Free;
+  end;
+
+  // a removed key
+  Edited := ReadTable(Table);
+  try
+    for I := Edited.fks.Count - 1 downto 0 do
+      if Edited.fks[I].name = Table + '_fk2' then
+        Edited.fks.Delete(I);
+    ApplyAndCompare(Table, Twin, 'a removed foreign key', DiffSQL(Table, Edited),
+      'ALTER TABLE ' + Twin + ' DROP FOREIGN KEY ' + Twin + '_fk2');
+  finally
+    Edited.Free;
+  end;
+end;
+
+// Expression defaults (MySQL 8.0.13, MariaDB 10.2.1) and a default with a quote in it: kept when the table is edited,
+// written again for a new table. (Both were written back as a wrong string literal.)
+procedure TTableEditorTest.TestExpressionDefault;
+begin
+  if not (FMariaDB or AtLeast(8, 0, 13)) then
+    Exit;
+  CheckTable('te_exprdef',
+    'id INT NOT NULL PRIMARY KEY, n INT NOT NULL DEFAULT (1 + 2), tag VARCHAR(40) NULL DEFAULT (UPPER(''abc'')), ' +
+    'created DATETIME NULL DEFAULT CURRENT_TIMESTAMP, quoted VARCHAR(10) NULL DEFAULT ''it''''s''', 'ENGINE=InnoDB');
 end;
 
 // what EditorTable sets when another engine is chosen (ADR-0034): the enumeration value and the engine's name
