@@ -44,11 +44,11 @@ default, in the original's style.
 Planned on 2026-11-22 (ADR-0055): 1.0.0 through `1.0.0-beta.N` (feature freeze) and `1.0.0-rc.N`; other databases,
 the modern icon set and further features come in minor releases after it.
 
-**Before 1.0.0-beta.1** (done 2026-11-22)
+**Before 1.0.0-beta.1** (done and released 2026-11-22)
 - ~~ADR statuses~~: ADR-0014, 0016, 0048 to 0053 and 0055 accepted, with what is still to check by hand in their
   status lines; ADR-0029 (search fields) is not built and waits for a minor release after 1.0.0.
 - ~~`README.md`~~ for the beta (status, version badge, features, Windows installer).
-- ~~Release notes~~ `docs/release-notes/1.0.0-beta.1.md`; ~~`VERSION`~~ `1.0.0-beta.1`. Left: tag and release workflow.
+- ~~Release notes~~ `docs/release-notes/1.0.0-beta.1.md`; ~~`VERSION`~~ `1.0.0-beta.1`. Tagged and released (`v1.0.0-beta.1`).
 
 **During the beta (owner's manual tests)**
 - Windows: SSH tunnel with Pageant and with `.ppk` keys (OpenSSL 4), stored SSH password, the exports (CSV options,
@@ -69,38 +69,12 @@ the modern icon set and further features come in minor releases after it.
   0053 to 0055).
 - macOS (ADR-0039), PostgreSQL and others behind the driver seam (ADR-0010).
 
-## Next (in this order)
+## Next
 
-1. ~~Port the units of the connect dialog.~~ Done. Remaining for the dialog: the busy
-   animation (`TAnimate` placeholder), the options dialog opened from it, and review of the
-   `Windows`-API code that is still in the ported units (`AuxFuncs`, `Options`).
-2. Main window. Its closure is 79 units / ~145k lines, of which roughly 35k are the project's own
-   code and ~11k small Mike Lischke helper libraries; the rest is third-party that is replaced
-   (ADR-0007). Own code still to port, with sizes (lines):
-   - application shell: `ApplicationDataModule` 561, `QueryBrowserOptionPages` 182, `Main` 1318,
-     `AppInstanceMgmt` 212, `MySQLCommonFuncs` 252, `CommonTypes` 174
-   - UI building blocks: `Sections` 1803, `InstanceSections` 60, `Toolbar` 1901, `TabHeader` 1295,
-     `AdvancedEdit` 197, `TableDrag` 457, `TextSearch` 343, `SchemaSelection` 92
-   - data and results: `MySQLResultSet` 1636, `MySQLResultSetControls` 4525,
-     `MySQLResultSetFieldViewer` 307, `SQLErrorGrid` 384, `SchemataTreeView` 2670
-   - editing and scripting: `ScriptPanel` 2118, `RegExTextImporter` 1728, `EditorTable` 3709
-     (+ `EditorTableVTEdit` 657, `EditorTableVTFKEdit` 691)
-   - the main form: `QueryBrowser` 8149 (the largest single unit)
-   Suggested order: shell → building blocks → results/tree → main form last, running the
-   self-tests after each step.
-3. SQL editor on SynEdit with a highlighter that matches the original colours.
-4. Remaining dialogs and flows: options pages, RegEx importer, field viewer,
-   about, text search, schema selection.
-5. Packaging for Windows (installer); then Linux and macOS builds (widgetset
-   work, platform guards for Windows API use). Linux so far: development container
-   (`tools/distrobox-setup.sh`), backend, bindings layout check and the test suite on all six matrix
-   servers (`tests/run-matrix.sh`); `build.sh` and the tools run there. The Linux release is an AppImage
-   (`tools/package-appimage.sh`, ADR-0027); with `--velopack` it updates itself (ADR-0037, update cycle
-   verified through the GitHub releases on Linux and Windows, 0.1.0-alpha.3 to alpha.5). The application compiles
-   with Qt6 (since 2026-11-20, ADR-0044; Fusion style, ADR-0045; GTK2 removed after 0.1.0-alpha.9), connects on all six servers, and the main window's features (results, editing,
-   scripts, export, dialogs, help) work by screenshot. State and next steps: `docs/linux-port.md`.
-   macOS is deferred (ADR-0039): the first Cocoa build runs but its dialogs are cut off; it waits for the
-   widgetset decision of the Qt move (ADR-0024). State: `docs/macos-setup.md`.
+The port is complete (connect dialog, main window, editor, dialogs, packaging for Windows and Linux; ADR-0047), so
+the old step list is gone; the git history has it. What comes next is "Road to 1.0.0" above. State of the platforms:
+Linux builds with Qt6 and ships as a self-updating AppImage (ADR-0027, 0037, 0044; `docs/linux-port.md`), Windows as
+an installer (ADR-0014); macOS is deferred (ADR-0039; `docs/macos-setup.md`).
 
 ## Backlog and ideas
 
