@@ -64,6 +64,7 @@ the modern icon set and further features come in minor releases after it.
 - `README.md` without the beta warning.
 
 **After 1.0.0 (minor releases)**
+- A memory guard for large result sets: pause and ask before the machine runs out of memory (ADR-0057, proposed).
 - Other MySQL-protocol servers, Manticore first (ADR-0054).
 - The modern icon set (branch `design/modern-icons`; its ADR needs a free number before it is merged, master uses
   0053 to 0055).
@@ -130,7 +131,7 @@ an installer (ADR-0014); macOS is deferred (ADR-0039; `docs/macos-setup.md`).
   1 KB per row was measured, 2 million rows ≈ 2 GB), with no query timeout. A table of tens of millions of rows
   without a filter ends in swapping or the OOM killer; Stop works. Keeping "no timeout" is wanted. Options, in
   the order to consider them:
-  - safety net: pause at a threshold (rows or memory, set in the options, can be switched off) and ask
+  - safety net (ADR-0057, planned for 1.1.0): pause at a threshold (rows or memory, set in the options, can be switched off) and ask
     "continue / stop"; small, takes nothing away;
   - fetching on demand while scrolling: `LIMIT/OFFSET` gets slow at deep offsets and is inconsistent when data
     changes, keyset paging needs a primary key and a plain table, a streaming cursor (`mysql_use_result`) blocks
