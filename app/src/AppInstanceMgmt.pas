@@ -4,7 +4,7 @@ unit AppInstanceMgmt;
 
 interface
 
-uses {$IFDEF MSWINDOWS}Windows{$ELSE}BaseUnix, ExtCtrls{$ENDIF}, SysUtils, Forms, TntMenus, Classes;
+uses {$IFDEF MSWINDOWS}Windows{$ELSE}BaseUnix, ExtCtrls, WaylandActivation{$ENDIF}, SysUtils, Forms, TntMenus, Classes;
 
 type
   PAppInstanceInfo = ^TAppInstanceInfo;
@@ -68,8 +68,9 @@ end;
 // Port: the instance list lives in Windows shared memory in the original. Elsewhere each instance writes a file
 // <pid>.instance (caption and connection, one per line) into a folder of the user's runtime directory, and the Window
 // menu lists the files whose process still runs. Choosing an entry writes <pid>.raise; the instance with that pid looks
-// for it twice a second and brings its main window to the front (no process can raise another's window on X11 or
-// Wayland reliably, the window manager decides).
+// for it twice a second and brings its main window to the front. On Wayland the file holds an activation token that
+// the clicking instance requested for the click, without which the compositor does not activate the other window
+// (unit WaylandActivation); elsewhere it is empty and the window manager decides.
 
 type
   TRaiseWatcher = class
@@ -105,13 +106,14 @@ end;
 
 //----------------------------------------------------------------------------------------------------------------------
 
-procedure RaiseMainForm;
+procedure RaiseMainForm(const Token: string = '');
 
 begin
   if Assigned(Application.MainForm) then
   begin
     Application.Restore;
     Application.MainForm.ShowOnTop;
+    ActivateWithToken(Application.MainForm, Token);
   end;
 end;
 
@@ -144,13 +146,28 @@ procedure TRaiseWatcher.TimerTick(Sender: TObject);
 
 var
   F: string;
+  L: TStringList;
+  Token: string;
 
 begin
   F := InstanceDir + IntToStr(fpGetPID) + '.raise';
   if FileExists(F) then
   begin
+    Token := '';
+    L := TStringList.Create;
+    try
+      try
+        L.LoadFromFile(F);
+        if L.Count > 0 then
+          Token := Trim(L[0]);
+      except
+        // Raise without a token.
+      end;
+    finally
+      L.Free;
+    end;
     DeleteFile(F);
-    RaiseMainForm;
+    RaiseMainForm(Token);
   end;
 end;
 
@@ -192,7 +209,9 @@ begin
     L := TStringList.Create;
     try
       try
-        L.SaveToFile(InstanceDir + IntToStr(FAppHandle) + '.raise');
+        L.Add(RequestActivationToken(Application.MainForm));
+        L.SaveToFile(InstanceDir + IntToStr(FAppHandle) + '.raise.tmp');
+        RenameFile(InstanceDir + IntToStr(FAppHandle) + '.raise.tmp', InstanceDir + IntToStr(FAppHandle) + '.raise');
       except
         // The instance may have ended meanwhile.
       end;
