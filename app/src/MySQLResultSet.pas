@@ -248,6 +248,7 @@ type
     destructor Destroy; override;
 
     procedure BuildGrid;
+    procedure FlushGrid;
 
     procedure QueryExecuted;
 
@@ -267,6 +268,11 @@ type
     FNeedCleanup: Boolean;
     FCanceller: IQueryCanceller;   // Port: cancels the query on the server (ADR-0020).
     FTicket: Int64;
+    // Port: the grid is updated at most every GridUpdateMs, not after every block of 10 KB the backend fetches: with
+    // wide rows that were thousands of updates and repaints (2 million rows x 8 columns took two minutes, 2026-11-22).
+    FBuiltRows: Longint;
+    FHasBuilt: Boolean;
+    FLastBuild: QWord;
     procedure CheckCancelled(var ErrorCode: MYX_LIB_ERROR);
   public
     MySQLRS: TMySQLRS;
@@ -303,6 +309,9 @@ implementation
 uses
   MySQLResultSetControls, ApplicationDataModule,
   Forms, SSHConnect;
+
+const
+  GridUpdateMs = 150; // Port: longest interval between two updates of the grid while rows are fetched
                                                    
 constructor TMySQLRS.Create;
 begin
@@ -1125,6 +1134,7 @@ begin
             result_set := nil;
             ErrorCode := MYX_STOP_EXECUTION;
           end;
+          Synchronize(FlushGrid);
           CheckCancelled(ErrorCode);
 
           //Handle multible resultsets
@@ -1159,6 +1169,8 @@ begin
                 //Reset thread values
                 current_row_count := 0;
                 previous_row_count := 0;
+                FBuiltRows := 0;
+                FHasBuilt := False;
                 result_set:=nil;
                 ExceptionMsg:='';
 
@@ -1169,6 +1181,7 @@ begin
                   @ErrorCode, Addr(self), @progress_row_fetch,
                   @resultset_realloc_before,
                   @resultset_realloc_after);
+                Synchronize(FlushGrid);
                 CheckCancelled(ErrorCode);
 
                 //Handle last result in a multi resultset query
@@ -1253,7 +1266,16 @@ begin
     PSender.previous_row_count:=previous_row_count;
     PSender.result_set:=result_set;
 
-    PSender.Synchronize(PSender.BuildGrid);
+    // The first block builds the columns and is never skipped; what is skipped here is built by a later block or by
+    // FlushGrid when the query ends.
+    if (not PSender.FHasBuilt) or (GetTickCount64 - PSender.FLastBuild >= GridUpdateMs) then
+    begin
+      PSender.previous_row_count:=PSender.FBuiltRows;
+      PSender.Synchronize(PSender.BuildGrid);
+      PSender.FHasBuilt:=True;
+      PSender.FBuiltRows:=current_row_count;
+      PSender.FLastBuild:=GetTickCount64;
+    end;
 
     Result:=Ord(PSender.MySQLRS.StopQuery);
   except
@@ -1297,6 +1319,23 @@ begin
     end;
   end;
 end;
+
+procedure TExecuteQueryThread.FlushGrid;
+
+// Builds the rows that the throttled progress callback has not shown yet (runs in the main thread).
+
+begin
+  if (MySQLRS = nil) or (result_set = nil) then
+    Exit;
+  if (not FHasBuilt) or (FBuiltRows >= result_set.rows_num) then
+    Exit;
+  previous_row_count := FBuiltRows;
+  current_row_count := result_set.rows_num;
+  BuildGrid;
+  FBuiltRows := current_row_count;
+end;
+
+//----------------------------------------------------------------------------------------------------------------------
 
 procedure TExecuteQueryThread.BuildGrid;
 var j: integer;

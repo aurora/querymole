@@ -155,7 +155,7 @@ an installer (ADR-0014); macOS is deferred (ADR-0039; `docs/macos-setup.md`).
   (`docs/export-review.md`, 2026-11-20); CSV settings on the Browser options page (separator, quotes, line breaks,
   header, BOM) and a TSV format in `LOAD DATA`'s format (ADR-0050). Candidates, each with its own ADR: SQL INSERT
   statements, Markdown table, real XLSX. The export entries are disabled while rows still load.
-  Open: the grid's fetch of large results is much slower than the backend's.
+  The grid's fetch of large results is as fast as the backend's since 2026-11-22 (updates every 150 ms at most).
 - HiDPI scaling, then optional vector-rendered icon set (ADR-0009).
 - Servers that speak the MySQL protocol (ADR-0054, proposed): a server profile (kind and version, detected at
   connect) and capabilities that generated SQL and the menus follow. Manticore first (tested 2026-11-22: connecting,
