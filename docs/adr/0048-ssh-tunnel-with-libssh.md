@@ -1,7 +1,8 @@
 <!-- SPDX-License-Identifier: GPL-2.0-or-later -->
 # ADR-0048 — SSH tunnel for connections, built on libssh
 
-- Status: Proposed (library chosen, mock-up below; the checks listed under "Open" before implementation)
+- Status: Accepted (implemented in 0.1.0-alpha.8, tested on the server matrix against an OpenSSH container; Pageant
+  and `.ppk` keys on Windows still to be checked by hand in the 1.0 beta)
 - Date: 2026-11-20
 - Deciders: Harald Lapp (project owner)
 

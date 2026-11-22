@@ -44,16 +44,11 @@ default, in the original's style.
 Planned on 2026-11-22 (ADR-0055): 1.0.0 through `1.0.0-beta.N` (feature freeze) and `1.0.0-rc.N`; other databases,
 the modern icon set and further features come in minor releases after it.
 
-**Before 1.0.0-beta.1**
-- ADR statuses that no longer match the code, to be confirmed by the owner: built but "Proposed" — ADR-0014
-  (packaging), ADR-0048 (SSH tunnel), ADR-0049 and ADR-0050 (exports; merged, and the Windows build is checked by the
-  test workflow now), ADR-0051 (connection manager), ADR-0052 (start and updates), ADR-0053 (groups, SSH password);
-  "to be confirmed" — ADR-0016 (help from the server); unclear whether built — ADR-0029 (search fields).
-- `README.md`: status "Beta" instead of "Alpha" (the warning and the badge, which still names 0.1.0-alpha.2), the known
-  problems checked, the download section for a version that is no longer only pre-releases later.
-- Release notes `docs/release-notes/1.0.0-beta.1.md` (changes since 0.1.0-alpha.9: ADR-0052, ADR-0053, GTK2
-  removed, the actions on Node 24).
-- `VERSION` to `1.0.0-beta.1`, tag, release workflow.
+**Before 1.0.0-beta.1** (done 2026-11-22)
+- ~~ADR statuses~~: ADR-0014, 0016, 0048 to 0053 and 0055 accepted, with what is still to check by hand in their
+  status lines; ADR-0029 (search fields) is not built and waits for a minor release after 1.0.0.
+- ~~`README.md`~~ for the beta (status, version badge, features, Windows installer).
+- ~~Release notes~~ `docs/release-notes/1.0.0-beta.1.md`; ~~`VERSION`~~ `1.0.0-beta.1`. Left: tag and release workflow.
 
 **During the beta (owner's manual tests)**
 - Windows: SSH tunnel with Pageant and with `.ppk` keys (OpenSSL 4), stored SSH password, the exports (CSV options,

@@ -22,9 +22,9 @@ Related.
 | [0011](0011-license-gpl-2-or-later.md) | License: GPL-2.0-or-later, as the original | Accepted |
 | [0012](0012-sql-editor-compatibility-layer-over-synedit.md) | SQL editor: a UniCodeEditor-compatible layer over SynEdit | Accepted; visual review outstanding |
 | [0013](0013-inline-help-reference-and-multiple-servers.md) | Inline help (reference) with several servers and versions | Superseded in part by ADR-0016 |
-| [0014](0014-release-packaging-and-updates-with-velopack.md) | Release packaging and updates with Velopack | Proposed (packaging implemented; updates in use) |
+| [0014](0014-release-packaging-and-updates-with-velopack.md) | Release packaging and updates with Velopack | Accepted (packaging and updates in use) |
 | [0015](0015-mpl-1-1-only-components-and-the-help-viewer.md) | MPL-1.1-only components and the help viewer | Proposed (IpHtml part resolved by ADR-0016; SynEdit part open) |
-| [0016](0016-help-from-the-connected-server.md) | Help reference from the connected server | Accepted by implementation (to confirm) |
+| [0016](0016-help-from-the-connected-server.md) | Help reference from the connected server | Accepted (implemented) |
 | [0017](0017-trim-menus-for-first-release.md) | Trim the menus for the first release | Accepted |
 | [0018](0018-update-check-with-velopack-pas.md) | Update check with velopack-pas and GitHub releases | Accepted (verified on Windows and Linux) |
 | [0019](0019-user-data-directory-of-the-original.md) | User data directory: the original's folder on each platform | Superseded in part by ADR-0030 (new folder with import) |
@@ -56,14 +56,14 @@ Related.
 | [0045](0045-qt6-fusion-style-and-standard-palette.md) | Qt6 build draws with the Fusion style and its standard palette | Accepted |
 | [0046](0046-test-workflow-on-every-push.md) | Every push is built and tested by GitHub Actions | Accepted |
 | [0047](0047-parity-reached-features-after-parity.md) | Functional parity is reached; new features follow, each with its own decision | Accepted |
-| [0048](0048-ssh-tunnel-with-libssh.md) | SSH tunnel for connections, built on libssh | Proposed (library chosen, mock-up done; open checks before implementation) |
-| [0049](0049-json-and-json-lines-export.md) | JSON and JSON Lines export of result sets | Proposed (implemented; Windows build not checked) |
-| [0050](0050-csv-export-options-and-tsv.md) | CSV export options and a TSV export format | Proposed (implemented; Windows build not checked) |
-| [0051](0051-connection-manager-test-button-and-groups.md) | Connection manager: a test button and groups of connections | Proposed |
-| [0052](0052-connect-animation-start-without-connection-automatic-update-check.md) | Connect animation, starting without a connection, automatic update check | Proposed |
-| [0053](0053-groups-in-the-connect-dialog-and-stored-ssh-password.md) | Groups in the connect dialog's list, and the stored SSH password | Proposed |
+| [0048](0048-ssh-tunnel-with-libssh.md) | SSH tunnel for connections, built on libssh | Accepted (implemented; Windows checks by hand open) |
+| [0049](0049-json-and-json-lines-export.md) | JSON and JSON Lines export of result sets | Accepted (implemented) |
+| [0050](0050-csv-export-options-and-tsv.md) | CSV export options and a TSV export format | Accepted (implemented) |
+| [0051](0051-connection-manager-test-button-and-groups.md) | Connection manager: a test button and groups of connections | Accepted (implemented) |
+| [0052](0052-connect-animation-start-without-connection-automatic-update-check.md) | Connect animation, starting without a connection, automatic update check | Accepted (implemented) |
+| [0053](0053-groups-in-the-connect-dialog-and-stored-ssh-password.md) | Groups in the connect dialog's list, and the stored SSH password | Accepted (implemented) |
 | [0054](0054-server-profiles-and-capabilities-manticore-first.md) | Server profiles and capabilities for MySQL-protocol servers, Manticore first | Proposed |
-| [0055](0055-version-numbers-from-1-0-0.md) | Version numbers from 1.0.0 on | Proposed |
+| [0055](0055-version-numbers-from-1-0-0.md) | Version numbers from 1.0.0 on | Accepted |
 
 ## Numbering
 

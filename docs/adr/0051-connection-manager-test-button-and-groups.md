@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: GPL-2.0-or-later -->
 # ADR-0051 — Connection manager: a test button and groups of connections
 
-- Status: Proposed (built; screenshot below)
+- Status: Accepted (implemented in 0.1.0-alpha.8; context menu and drag and drop still to be checked by hand)
 - Date: 2026-11-21
 - Deciders: Harald Lapp (project owner)
 

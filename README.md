@@ -8,8 +8,8 @@
 </p>
 
 <p align="center">
-  <img alt="Status: alpha" src="https://img.shields.io/badge/status-alpha-orange">
-  <img alt="Version 0.1.0-alpha.2" src="https://img.shields.io/badge/version-0.1.0--alpha.2-blue">
+  <img alt="Status: beta" src="https://img.shields.io/badge/status-beta-yellow">
+  <img alt="Version 1.0.0-beta.1" src="https://img.shields.io/badge/version-1.0.0--beta.1-blue">
   <img alt="Licence: GPL-2.0-or-later" src="https://img.shields.io/badge/licence-GPL--2.0--or--later-green">
   <img alt="Free Pascal / Lazarus" src="https://img.shields.io/badge/built%20with-Free%20Pascal%20%2F%20Lazarus-informational">
 </p>
@@ -21,9 +21,9 @@ Free Pascal and Lazarus so that it runs on Windows and Linux, against MySQL 5.7 
 The look and behaviour are those of the original (ADR-0001); new features are added on top, off by default (ADR-0047).
 
 > [!WARNING]
-> **Alpha.** The program connects, runs queries, shows and edits results, runs scripts and exports, but it has
-> known faults (see [Known problems](#known-problems)). Use a test account or a test server and keep your own
-> backups.
+> **Beta of 1.0.0.** All functions of the original work, and the features are complete for 1.0.0 (ADR-0055); what is
+> left is testing and fixing. Expect faults (see [Known problems](#known-problems)), use a test account or a test
+> server for anything important, and keep your own backups.
 
 > [!NOTE]
 > QueryMole is not affiliated with or endorsed by Oracle. "MySQL" is a trademark of Oracle and names only the
@@ -47,28 +47,32 @@ application's self-tests run against all six servers in throw-away containers.
 
 | Area | What works |
 |---|---|
-| **Connecting** | connect dialog with stored connections; TLS "preferred" with fallback to an unencrypted connection |
+| **Connecting** | connect dialog with stored connections, in groups; TLS "preferred" with fallback to an unencrypted connection; SSH tunnel with OpenSSH or PuTTY keys, ssh-agent, Pageant or a password (ADR-0048); a "Test" button in the connection manager (ADR-0051); Cancel at start opens the program without a connection (ADR-0052) |
 | **Browsing** | schema tree with search |
 | **Querying** | SQL editor with highlighting, several result tabs, EXPLAIN, stopping a running query on the server |
 | **Results** | result grid with editing (apply and discard) |
 | **Scripts** | scripts with breakpoints |
 | **Tables** | table editor that keeps tables intact on current servers; data types and storage engines follow the server (ADR-0034) |
-| **Export** | CSV, HTML, XML, Excel and PLIST |
+| **Export** | CSV (with settings for separator, header, quoting, line ending), TSV, JSON, JSON Lines, HTML, XML, Excel and PLIST (ADR-0049, ADR-0050) |
 | **Help** | help panel whose SQL reference comes from the connected server |
 | **More** | options dialog, text search, regular expression importer |
-| **Updates** | the Linux AppImage updates itself (Help > Check for Updates, ADR-0037) |
+| **Updates** | Windows (installer) and the Linux AppImage update themselves: Help > Check for Updates, or on request at every start (ADR-0037, ADR-0052) |
 
 ## Download and run
 
-Releases are published as GitHub pre-releases: **<https://github.com/aurora/querymole/releases>**
+Releases are published on GitHub: **<https://github.com/aurora/querymole/releases>**. Until 1.0.0 they are
+pre-releases (betas and release candidates of 1.0.0, ADR-0055).
 
 <table>
 <tr><th>Platform</th><th>How</th></tr>
 <tr><td><b>Windows</b><br>64 bit</td><td>
 
-Unpack the zip and run `querymole.exe`. Settings and connections are kept in `%APPDATA%\QueryMole\`. On the first
-start, the settings of the original MySQL Query Browser are copied from `%APPDATA%\MySQL\` (that folder is left
-as it is). The zip does not update itself; download the new version and replace the old one.
+Run `QueryMole-win-Setup.exe`: it installs for the current user (no administrator rights) into
+`%LOCALAPPDATA%\QueryMole` and updates itself. The installer is not signed yet, so Windows SmartScreen may warn ("More
+info", then "Run anyway"). There is also a portable zip: unpack it and run `querymole.exe`; it does not update itself.
+
+Settings and connections are kept in `%APPDATA%\QueryMole\`. On the first start, the settings of the original MySQL
+Query Browser are copied from `%APPDATA%\MySQL\` (that folder is left as it is).
 
 </td></tr>
 <tr><td><b>Linux</b><br>x86_64</td><td>
@@ -84,7 +88,8 @@ The AppImage brings Qt 6 and the other libraries it needs and runs on distributi
 FUSE 2 on the system, start it with `--appimage-extract-and-run`.
 
 Settings are kept in `~/.config/querymole/` (`$XDG_CONFIG_HOME`); on the first start, those of the original Linux
-version are copied from `~/.mysqlgui/`. The AppImage updates itself in place (ADR-0037).
+version are copied from `~/.mysqlgui/`. `QueryMole.AppImage` updates itself in place (ADR-0037); the AppImage with
+the version in its name has no updater. Keep it in a folder you can write to (for example `~/Applications`).
 
 </td></tr>
 <tr><td><b>macOS</b></td><td>Not yet. A first build runs but needs layout work; macOS follows with the move to Qt (ADR-0039, <a href="docs/macos-setup.md">docs/macos-setup.md</a>).</td></tr>
@@ -107,7 +112,8 @@ version are copied from `~/.mysqlgui/`. The AppImage updates itself in place (AD
 - **Linux:** no "OS specific" password storage, only "Plaintext" and "Obscured" (ADR-0021); no global hot keys
   (ADR-0022). From 0.1.0-alpha.6 on the Linux version uses Qt 6 with Qt's Fusion style instead of GTK2 (ADR-0044,
   ADR-0045): it looks the same on every desktop and does not follow the desktop's theme or dark mode.
-- **Windows:** no installer and no updates yet (Velopack's `Setup.exe` is planned, ADR-0037).
+- **Windows:** the installer is not signed yet (SmartScreen warns once). SSH with Pageant and PuTTY keys has been
+  tested less on Windows than on Linux.
 - The user interface is the original's, including its look and its English texts; some parts look different
   under Qt on Linux than on Windows.
 

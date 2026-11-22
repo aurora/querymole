@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: GPL-2.0-or-later -->
 # ADR-0055 — Version numbers from 1.0.0 on
 
-- Status: Proposed
+- Status: Accepted (owner, 2026-11-22)
 - Date: 2026-11-22
 - Deciders: Harald Lapp (project owner)
 

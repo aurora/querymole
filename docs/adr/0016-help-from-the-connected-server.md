@@ -1,6 +1,7 @@
 # ADR-0016 — Help reference from the connected server
 
-- Status: Accepted by implementation 2026-10-12 (to be confirmed); supersedes the content plan of ADR-0013
+- Status: Accepted (implemented 2026-10-12, in every release since; confirmed for 1.0, ADR-0055); supersedes the
+  content plan of ADR-0013
 - Date: 2026-10-12
 - Deciders: Harald Lapp (project owner)
 

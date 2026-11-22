@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: GPL-2.0-or-later -->
 # ADR-0053 — Groups in the connect dialog's list, and the stored SSH password
 
-- Status: Proposed (built; screenshots below)
+- Status: Accepted (implemented for 1.0.0-beta.1)
 - Date: 2026-11-22
 - Deciders: Harald Lapp (project owner)
 

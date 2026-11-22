@@ -1,7 +1,7 @@
 # ADR-0014 — Release packaging and updates with Velopack
 
-- Status: Proposed (packaging implemented; update check and GitHub feed in use since 0.1.0-alpha.3, see ADR-0018
-  and ADR-0037)
+- Status: Accepted (packaging, update check and GitHub feed in use since 0.1.0-alpha.3, see ADR-0018 and
+  ADR-0037; confirmed for 1.0, ADR-0055)
 - Date: 2026-10-11
 - Deciders: Harald Lapp (project owner)
 

@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: GPL-2.0-or-later -->
 # ADR-0049 — JSON and JSON Lines export of result sets
 
-- Status: Proposed (implemented on branch `export-json`; Windows build not checked)
+- Status: Accepted (implemented in 0.1.0-alpha.8; the Windows build is checked by the test workflow)
 - Date: 2026-11-20
 - Deciders: Harald Lapp (project owner)
 

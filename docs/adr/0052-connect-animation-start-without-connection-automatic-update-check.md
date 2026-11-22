@@ -1,7 +1,8 @@
 <!-- SPDX-License-Identifier: GPL-2.0-or-later -->
 # ADR-0052 — Connect animation, starting without a connection, automatic update check
 
-- Status: Proposed (built; screenshots below)
+- Status: Accepted (implemented for 1.0.0-beta.1; the update question in an installed build still to be checked by
+  hand)
 - Date: 2026-11-22
 - Deciders: Harald Lapp (project owner)
 
