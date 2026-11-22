@@ -975,7 +975,8 @@ int myx_connect_to_instance(MYX_USER_CONNECTION *user_conn, MYSQL *mysql)
     mysql_options(mysql, MYSQL_OPT_USE_REMOTE_CONNECTION, (char *)1);
 #endif
 
-  mysql_options(mysql, MYSQL_SET_CHARSET_NAME, "utf8");
+  /* revival: utf8mb4, not utf8 (utf8mb3): 4-byte characters (emoji) reached the server as ? (ADR-0056) */
+  mysql_options(mysql, MYSQL_SET_CHARSET_NAME, "utf8mb4");
 
   if(connect_options.use_ssl != 0)
   {
@@ -1064,7 +1065,8 @@ int myx_connect_to_instance(MYX_USER_CONNECTION *user_conn, MYSQL *mysql)
         !     mysql_version_is_later_or_equal_than(mysql, 5, 0)) ||
        mysql_full_version_is_later_or_equal_than(mysql, 5, 0, 2))
   {
-    if (mysql_query(mysql, "SET NAMES utf8"))
+    /* revival: utf8mb4 (ADR-0056); a server without it (before 5.5.3) gets utf8 as before */
+    if (mysql_query(mysql, "SET NAMES utf8mb4") && mysql_query(mysql, "SET NAMES utf8"))
       return -1;
   }
   //using SET CHARACTER SET utf8;

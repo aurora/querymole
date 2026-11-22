@@ -71,8 +71,8 @@ numbers and dates as the server formats them, very wide rows (300 columns × 100
 - **The grid fetch of a large result is much slower than the backend fetch** (2M rows: 2–3 s in the tests; in the
   program under xvfb only about 40k rows after 4 s and 270k after about 20 s). Not part of the export; worth a
   profile of the grid's per-block work (`TExecuteQueryThread.BuildGrid`).
-- **4-byte UTF-8 (emoji)** cannot reach any export: the connection uses `utf8` (utf8mb3, `myx_library.c`), so the
-  server sends `?`. A connection charset question, not an exporter one.
+- **4-byte UTF-8 (emoji)** could not reach any export because the connection used `utf8` (utf8mb3). Fixed on
+  2026-11-22: the connection uses `utf8mb4` (ADR-0056).
 - **Empty BLOB values arrive as NULL** in the result set (`myx_recordset.c` keeps `""` only for string/text columns),
   so every format exports an empty BLOB as NULL. VARBINARY is not affected.
 - **Binary values end at their first zero byte** in every format: the exporter interface passes C strings without

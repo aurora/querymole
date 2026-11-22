@@ -64,6 +64,7 @@ Related.
 | [0053](0053-groups-in-the-connect-dialog-and-stored-ssh-password.md) | Groups in the connect dialog's list, and the stored SSH password | Accepted (implemented) |
 | [0054](0054-server-profiles-and-capabilities-manticore-first.md) | Server profiles and capabilities for MySQL-protocol servers, Manticore first | Proposed |
 | [0055](0055-version-numbers-from-1-0-0.md) | Version numbers from 1.0.0 on | Accepted |
+| [0056](0056-connection-character-set-utf8mb4.md) | The connection uses utf8mb4 | Accepted |
 
 ## Numbering
 

@@ -1280,7 +1280,8 @@ static MYX_RS_ACTION_ERRORS *check_action_character_sets(MYX_RESULTSET *resultse
     //XXX dont check if BLOB
     if (tcol && tcol->charset)
     {
-      if (strcasecmp(tcol->charset, "utf-8")==0 || strcasecmp(tcol->charset, "utf8")==0)
+      if (strcasecmp(tcol->charset, "utf-8")==0 || strcasecmp(tcol->charset, "utf8")==0 ||
+          strcasecmp(tcol->charset, "utf8mb3")==0 || strcasecmp(tcol->charset, "utf8mb4")==0)
         gic[i]= NULL;
       else
       {
@@ -1374,7 +1375,7 @@ static int do_update_value(MYX_RESULTSET *resultset, const char *pks,
   // restore the encoding to utf8
   if ((mysql_version_is_later_or_equal_than(resultset->mysql,4,1)) && (action->column->column_type == MYX_RSCT_BLOB))
   {
-    if (myx_mysql_query(resultset->mysql, "SET CHARACTER SET utf8") != 0)
+    if (myx_mysql_query(resultset->mysql, "SET NAMES utf8mb4") != 0)
       g_warning("Can't set character set back to utf8 while saving resultset changes");
   }
   

@@ -20,6 +20,7 @@ type
     procedure TestWrongPasswordFails;
     procedure TestMissingSchemaStillConnects;
     procedure TestUnreachableHostWaitsOnce;
+    procedure TestFourByteCharactersSurvive;
   end;
 
 implementation
@@ -192,6 +193,40 @@ begin
     Start := GetTickCount64;
     AssertTrue('must fail', myx_connect_to_instance(@Conn, My) <> 0);
     AssertTrue(Format('one attempt of 2 s, took %d ms', [GetTickCount64 - Start]), GetTickCount64 - Start < 3500);
+  finally
+    myx_mysql_close(My);
+  end;
+end;
+
+// The connection uses utf8mb4 (ADR-0056); with utf8 (utf8mb3) a 4-byte character such as an emoji came back as '?'.
+procedure TConnectTest.TestFourByteCharactersSurvive;
+var
+  Conn: MYX_USER_CONNECTION;
+  My: PMYSQL;
+  Err: MYX_LIB_ERROR;
+  Rs: PMYX_RESULTSET;
+  Value, Emoji: AnsiString;
+begin
+  FillConnection(Conn, Env('QBR_TEST_USER', 'root'), Env('QBR_TEST_PASSWORD', 'qbr-test'),
+    Env('QBR_TEST_HOST', '127.0.0.1'));
+  My := myx_mysql_init;
+  AssertNotNull('myx_mysql_init', My);
+  try
+    AssertEquals('connect (' + myx_mysql_error(My) + ')', 0, myx_connect_to_instance(@Conn, My));
+    Err := MYX_NO_ERROR;
+    Emoji := Chr($F0) + Chr($9F) + Chr($98) + Chr($80); // U+1F600, built from bytes (a #$F0 literal would be re-encoded)
+    Rs := myx_query_execute(My, 'SELECT ''' + Emoji + ''' AS e, CHAR_LENGTH(''' + Emoji + ''') AS n',
+      0, nil, @Err, nil, nil, nil, nil);
+    AssertNotNull('resultset', Rs);
+    try
+      AssertEquals('error code', MYX_NO_ERROR, Err);
+      SetString(Value, Rs^.rows^.fields^.value, Rs^.rows^.fields^.value_length);
+      AssertTrue('emoji comes back unchanged, got ' + IntToStr(Length(Value)) + ' bytes', Value = Emoji);
+      SetString(Value, (Rs^.rows^.fields + 1)^.value, (Rs^.rows^.fields + 1)^.value_length);
+      AssertEquals('the server counts one character', '1', Value);
+    finally
+      myx_query_free_resultset(Rs);
+    end;
   finally
     myx_mysql_close(My);
   end;

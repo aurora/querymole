@@ -207,6 +207,8 @@ char *iconv_char_name(const char *mysql_character_set_name)
     {"cp1250", "cp1250"},
     {"gbk", "gbk"},
     {"utf8", "utf8"},
+    {"utf8", "utf8mb3"}, /* revival: names of the same character set (ADR-0056) */
+    {"utf8", "utf8mb4"},
     {"macroman", "macroman"},
     {"cp1251", "cp1251"},
     {"cp1256", "cp1256"},
