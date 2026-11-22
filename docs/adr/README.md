@@ -60,6 +60,7 @@ Related.
 | [0049](0049-json-and-json-lines-export.md) | JSON and JSON Lines export of result sets | Proposed (implemented; Windows build not checked) |
 | [0050](0050-csv-export-options-and-tsv.md) | CSV export options and a TSV export format | Proposed (implemented; Windows build not checked) |
 | [0051](0051-connection-manager-test-button-and-groups.md) | Connection manager: a test button and groups of connections | Proposed |
+| [0052](0052-connect-animation-start-without-connection-automatic-update-check.md) | Connect animation, starting without a connection, automatic update check | Proposed |
 
 ## Numbering
 

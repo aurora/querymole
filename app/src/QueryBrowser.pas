@@ -1198,7 +1198,9 @@ begin
             // Otherwise display normal result set tabsheet.
             FActiveRSTabSheet := AddNewRSTabSheet;
 
-  if (not (MySQLConn.Connected)) then
+  // revival: the original started without a connection only to edit a script file (-qs) and showed just the tabs
+  // then; a start without a connection after Cancel (ADR-0052) keeps the normal window
+  if (not (MySQLConn.Connected)) and (ApplicationDM.Options.StartScriptFile <> '') then
     ApplicationDM.Options.OnlyTabsheets := True;
 
   DoOptionsChanged;
@@ -3400,7 +3402,8 @@ procedure TQueryBrowserForm.AddNewRSTabMIClick(Sender: TObject);
 
 begin
   FActiveRSTabSheet := AddNewRSTabSheet;
-  if (ToolbarPnl.Visible) and (FSQLEditor.Visible) then
+  // revival: without a connection the editor is disabled (ADR-0052)
+  if (ToolbarPnl.Visible) and (FSQLEditor.Visible) and FSQLEditor.CanFocus then
     FSQLEditor.SetFocus;
 end;
 

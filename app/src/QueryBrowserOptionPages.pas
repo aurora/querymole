@@ -62,6 +62,7 @@ type
     FExportGB: TTntGroupBox;
     FSeparatorCB, FQuotingCB, FLineBreaksCB: TTntComboBox;
     FHeaderCBox, FBOMCBox: TTntCheckBox;
+    FUpdateCheckCBox: TTntCheckBox;   // revival: next to "Associate ..." in "Various" (ADR-0052)
     procedure CreateExportControls;
   public
     { Public declarations }
@@ -91,6 +92,15 @@ procedure TQueryBrowserOptionPagesForm.FormCreate(Sender: TObject);
 begin
   // revival: before InitForm, so that the new group gets the same font and group box adjustments (ADR-0050)
   CreateExportControls;
+  // revival: the automatic update check, in the free right half of "Various" (ADR-0052)
+  FUpdateCheckCBox := TTntCheckBox.Create(Self);
+  FUpdateCheckCBox.Parent := AssociateFileExtensionsCBox.Parent;
+  FUpdateCheckCBox.SetBounds(AssociateFileExtensionsCBox.Parent.ClientWidth div 2 + 10,
+    AssociateFileExtensionsCBox.Top, AssociateFileExtensionsCBox.Parent.ClientWidth div 2 - 20, 17);
+  FUpdateCheckCBox.Caption := _('Check for updates at start');
+  FUpdateCheckCBox.OnClick := DoChange;
+  // the original's box spans the group; its click area would cover the new one
+  AssociateFileExtensionsCBox.Width := FUpdateCheckCBox.Left - AssociateFileExtensionsCBox.Left - 10;
   InitForm(self);
   // Port: the product's name in the (translated) caption (ADR-0030)
   AssociateFileExtensionsCBox.Caption := StringReplace(AssociateFileExtensionsCBox.Caption, 'Query Browser',
@@ -207,6 +217,7 @@ begin
     AlignNumericColsRightCBox.Checked := ApplicationDM.Options.AlignNumericColsRight;
 
     AssociateFileExtensionsCBox.Checked := ApplicationDM.Options.AssociateFileExtensions;
+    FUpdateCheckCBox.Checked := ApplicationDM.Options.UpdateCheckOnStart;
 
     ShowAdvancedToolbarMI.Checked := ApplicationDM.Options.ShowAdvancedToolbar;
 
@@ -252,6 +263,11 @@ begin
     ApplicationDM.Options.ShowAdvancedToolbar := ShowAdvancedToolbarMI.Checked;
 
     ApplicationDM.Options.AssociateFileExtensions := AssociateFileExtensionsCBox.Checked;
+    if FUpdateCheckCBox.Checked <> ApplicationDM.Options.UpdateCheckOnStart then
+    begin
+      ApplicationDM.Options.UpdateCheckOnStart := FUpdateCheckCBox.Checked;
+      ApplicationDM.Options.UpdateCheckAsked := True;   // a choice made here needs no question at start
+    end;
 
     // revival: ADR-0050
     I := FSeparatorCB.Items.IndexOf(FSeparatorCB.Text);

@@ -134,6 +134,8 @@ default, in the original's style.
   - less memory per row (moves the limit, does not remove it).
   An automatic `LIMIT` on double click (as Workbench, DBeaver) would change the SQL users see and expect;
   least preferred.
+- **Start and updates** (ADR-0052, proposed): the banner animation while connecting; Cancel at start opens the program
+  without a connection; an opt-in update check at start (asked once) with "development versions" in the update dialogs.
 - **Connection manager** (ADR-0051, proposed): a "Test" button and groups of stored connections (folders in the tree,
   kept in `storage_path`). Open: groups in the connect dialog's list.
 - **SSH tunnel** for connections (ADR-0048, proposed): libssh in the program, OpenSSH and PuTTY keys, agent and

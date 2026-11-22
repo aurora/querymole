@@ -69,8 +69,11 @@ def make_app_rc():
     # the busy animation top right in the main window (frames side by side, played by app/compat/Animate.pas), in
     # place of the original's dolphin_loop (ADR-0030); written by tools/make_branding.sh
     busy = os.path.join(IMAGES, "busy.png")
+    # the same in the connect dialog's banner while it connects (ADR-0052)
+    connect_busy = os.path.join(IMAGES, "connect_busy.png")
     lines = ['MAINICON ICON "%s"' % icon.replace("\\", "/"),
              'querymole_busy PNG "%s"' % busy.replace("\\", "/"),
+             'querymole_connect_busy PNG "%s"' % connect_busy.replace("\\", "/"),
              "1 VERSIONINFO",
              "FILEVERSION %s" % ",".join(nums),
              "PRODUCTVERSION %s" % ",".join(nums),

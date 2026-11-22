@@ -34,6 +34,13 @@ function UpdatesAvailable: Boolean;
 // program and lets Velopack replace the installation.
 procedure CheckForUpdatesInteractive;
 
+// Normal start, just before the main loop (ADR-0052): a few seconds after the window shows, asks once whether the
+// program may check for updates at every start, and checks quietly if so (a dialog only when there is a new version).
+procedure ScheduleStartupUpdateCheck;
+
+// Developer mode --shot-update-question <png> (ADR-0052): the update question with its check boxes, photographed.
+procedure ShotUpdateQuestion(const FileName: String);
+
 // Developer mode --selftest-update <report> (ADR-0037): the same steps without dialogs, against QBR_UPDATE_URL (it
 // must be set, so that the self-test never runs against the project by accident). Writes the
 // feed, the installed version and the result of the check to the report; if there is an update, downloads it and
@@ -44,7 +51,8 @@ implementation
 
 uses
   {$IFDEF UNIX}BaseUnix,{$ENDIF}
-  Classes, SysUtils, Controls, Forms, StdCtrls, ComCtrls, Dialogs, gnugettext, CommonFuncs,
+  Classes, SysUtils, Controls, Forms, StdCtrls, ComCtrls, Dialogs, ExtCtrls, Graphics, LCLIntf, LCLType, gnugettext,
+  CommonFuncs, ApplicationDataModule, DevTools,
   Velopack.Types, Velopack.App, Velopack.Updater, Velopack.Manager;
 
 // An AppImage is updated by replacing its file, which needs write access to its folder. Velopack would then ask
@@ -109,10 +117,99 @@ begin
     Result := UpdateOverride;
 end;
 
-// A pre-release (alpha, beta) is updated to newer pre-releases as well; a release only to releases.
+// A pre-release (alpha, beta) is updated to newer pre-releases as well; a release only to releases. Revival: the
+// setting "Offer development versions" in the update dialogs overrides that (ADR-0052).
 function UpdatePrerelease: Boolean;
 begin
-  Result := Pos('-', revival_version) > 0;
+  if (ApplicationDM <> nil) and (ApplicationDM.Options.UpdateDevelopmentVersions = '1') then
+    Result := True
+  else if (ApplicationDM <> nil) and (ApplicationDM.Options.UpdateDevelopmentVersions = '0') then
+    Result := False
+  else
+    Result := Pos('-', revival_version) > 0;
+end;
+
+// revival: the update dialogs with the two settings as check boxes (ADR-0052). Returns True for Yes or OK; the
+// check boxes are stored when the dialog closes with any button.
+function UpdateQuestion(const Text: String; DlgType: TMsgDlgType; YesNo: Boolean;
+  Show: Boolean = True; const ShotFile: String = ''): Boolean;
+var
+  Dlg: TForm;
+  Msg: TLabel;
+  AutoCB, DevCB: TCheckBox;
+  YesBtn, NoBtn: TButton;
+  R: TRect;
+begin
+  Dlg := TForm.CreateNew(nil);
+  try
+    Dlg.BorderStyle := bsDialog;
+    Dlg.Position := poMainFormCenter;
+    Dlg.Caption := RevivalProductName + ' - ' + _('Updates');
+    Dlg.ClientWidth := 440;
+    Msg := TLabel.Create(Dlg);
+    Msg.Parent := Dlg;
+    Msg.AutoSize := False;
+    Msg.WordWrap := True;
+    Msg.Caption := Text;
+    Msg.SetBounds(16, 16, 408, 20);
+    // the height the wrapped text needs in its width
+    Msg.Canvas.Font := Msg.Font;
+    R := Rect(0, 0, Msg.Width, 0);
+    DrawText(Msg.Canvas.Handle, PChar(Text), Length(Text), R, DT_CALCRECT or DT_WORDBREAK);
+    Msg.Height := R.Bottom + 4;
+    AutoCB := TCheckBox.Create(Dlg);
+    AutoCB.Parent := Dlg;
+    AutoCB.SetBounds(16, Msg.Top + Msg.Height + 14, 408, 19);
+    AutoCB.Caption := _('Check for updates when the program starts');
+    AutoCB.Checked := ApplicationDM.Options.UpdateCheckOnStart;
+    DevCB := TCheckBox.Create(Dlg);
+    DevCB.Parent := Dlg;
+    DevCB.SetBounds(16, AutoCB.Top + 24, 408, 19);
+    DevCB.Caption := _('Offer development versions (alpha, beta)');
+    DevCB.Checked := UpdatePrerelease;
+    YesBtn := TButton.Create(Dlg);
+    YesBtn.Parent := Dlg;
+    YesBtn.Default := True;
+    YesBtn.ModalResult := mrYes;
+    NoBtn := nil;
+    if YesNo then
+    begin
+      YesBtn.Caption := _('Yes');
+      NoBtn := TButton.Create(Dlg);
+      NoBtn.Parent := Dlg;
+      NoBtn.Caption := _('No');
+      NoBtn.Cancel := True;
+      NoBtn.ModalResult := mrNo;
+      NoBtn.SetBounds(Dlg.ClientWidth - 16 - 80, DevCB.Top + 36, 80, 25);
+      YesBtn.SetBounds(NoBtn.Left - 8 - 80, NoBtn.Top, 80, 25);
+    end
+    else
+    begin
+      YesBtn.Caption := _('OK');
+      YesBtn.Cancel := True;
+      YesBtn.SetBounds(Dlg.ClientWidth - 16 - 80, DevCB.Top + 36, 80, 25);
+    end;
+    Dlg.ClientHeight := YesBtn.Top + YesBtn.Height + 12;
+    if ShotFile <> '' then
+    begin
+      Dlg.Show;
+      CaptureWindowToPng(Dlg, ShotFile);
+      Exit(False);
+    end;
+    if not Show then
+      Exit(False);
+    Result := Dlg.ShowModal = mrYes;
+    // the settings, whatever was answered
+    ApplicationDM.Options.UpdateCheckOnStart := AutoCB.Checked;
+    if DevCB.Checked <> (Pos('-', revival_version) > 0) then
+      ApplicationDM.Options.UpdateDevelopmentVersions := IntToStr(Ord(DevCB.Checked))
+    else
+      ApplicationDM.Options.UpdateDevelopmentVersions := 'auto';
+    ApplicationDM.Options.UpdateCheckAsked := True;
+    ApplicationDM.Options.StoreOptions;
+  finally
+    Dlg.Free;
+  end;
 end;
 
 // An empty string normally; with the developer override (QBR_UPDATE_URL) a paragraph that names the feed and the
@@ -147,8 +244,15 @@ type
     procedure ShowProgress;
     procedure CloseProgress;
   public
+    Silent: Boolean;   // revival: the check at start, which shows nothing unless there is a new version (ADR-0052)
     destructor Destroy; override;
     procedure Run;
+  end;
+
+  // revival: the check a few seconds after the start (ADR-0052)
+  TStartupCheck = class
+    Timer: TTimer;
+    procedure Fire(Sender: TObject);
   end;
 
 var
@@ -171,7 +275,52 @@ begin
     Exit;
   if GDialogs = nil then
     GDialogs := TUpdateDialogs.Create;
+  GDialogs.Silent := False;
   GDialogs.Run;
+end;
+
+var
+  GStartupCheck: TStartupCheck = nil;
+
+procedure TStartupCheck.Fire(Sender: TObject);
+begin
+  Timer.Enabled := False;
+  if not ApplicationDM.Options.UpdateCheckAsked then
+  begin
+    // once: whether the program may look for new versions at every start (it asks before downloading anything)
+    ApplicationDM.Options.UpdateCheckOnStart := MessageDlg(Format(_('%s can look for a new version each time it ' +
+      'starts. It asks before it downloads anything, and you can change this in the options (Browser) and in the ' +
+      'update dialog.'), [RevivalProductName]) + LineEnding + LineEnding + _('Check for updates when the program ' +
+      'starts?'), mtConfirmation, [mbYes, mbNo], 0) = mrYes;
+    ApplicationDM.Options.UpdateCheckAsked := True;
+    ApplicationDM.Options.StoreOptions;
+  end;
+  if ApplicationDM.Options.UpdateCheckOnStart then
+  begin
+    if GDialogs = nil then
+      GDialogs := TUpdateDialogs.Create;
+    GDialogs.Silent := True;
+    GDialogs.Run;
+  end;
+end;
+
+procedure ScheduleStartupUpdateCheck;
+begin
+  // only where updates work (the installed program, the self-updating AppImage), not for the portable packages
+  if not GLibraryFound or (UpdateOverride <> '') then
+    Exit;
+  GStartupCheck := TStartupCheck.Create;
+  GStartupCheck.Timer := TTimer.Create(nil);
+  GStartupCheck.Timer.Interval := 3000;
+  GStartupCheck.Timer.OnTimer := GStartupCheck.Fire;
+  GStartupCheck.Timer.Enabled := True;
+end;
+
+procedure ShotUpdateQuestion(const FileName: String);
+begin
+  EnsureMainForm;
+  UpdateQuestion(Format(_('Version %s is available. Download and install it now?'), ['0.1.0-alpha.10']),
+    mtConfirmation, True, False, FileName);
 end;
 
 procedure RunUpdateSelftest(const ReportFile: String);
@@ -258,10 +407,7 @@ begin
       if not OverrideIsGitHub(UpdateOverride, Repo) then
         Repo := '';
     if Repo <> '' then
-    begin
-      FUpdater.GitHubRepoUrl := Repo;
-      FUpdater.GitHubPrerelease := UpdatePrerelease;
-    end
+      FUpdater.GitHubRepoUrl := Repo
     else
       FUpdater.UpdateUrl := UpdateOverride;
     FUpdater.OnCheckCompleted := HandleCheck;
@@ -271,7 +417,11 @@ begin
   end;
   if FUpdater.Busy then
     Exit;
-  Screen.Cursor := crHourGlass;
+  // revival: each time, the setting may have changed (ADR-0052)
+  if FUpdater.GitHubRepoUrl <> '' then
+    FUpdater.GitHubPrerelease := UpdatePrerelease;
+  if not Silent then
+    Screen.Cursor := crHourGlass;
   try
     FUpdater.CheckForUpdates;
   except
@@ -286,13 +436,16 @@ var
 begin
   Screen.Cursor := crDefault;
   if AResult <> ucUpdateAvailable then
-    MessageDlg(_('You are running the latest version.') + UpdateSourceNote, mtInformation, [mbOK], 0)
+  begin
+    if not Silent then
+      UpdateQuestion(_('You are running the latest version.') + UpdateSourceNote, mtInformation, False);
+  end
   else
     if not UpdateFolderWritable(Folder) then
       MessageDlg(NotWritableMessage(ATarget.Version, Folder) + UpdateSourceNote, mtWarning, [mbOK], 0)
   else
-    if MessageDlg(Format(_('Version %s is available. Download and install it now?'), [ATarget.Version]) +
-      UpdateSourceNote, mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+    if UpdateQuestion(Format(_('Version %s is available. Download and install it now?'), [ATarget.Version]) +
+      UpdateSourceNote, mtConfirmation, True) then
     begin
       ShowProgress;
       FUpdater.DownloadUpdates;
@@ -322,6 +475,9 @@ procedure TUpdateDialogs.HandleError(Sender: TObject; const AMessage: string);
 begin
   Screen.Cursor := crDefault;
   CloseProgress;
+  // revival: the check at start says nothing about failures (no network, GitHub's rate limit); the menu entry does
+  if Silent and (FProgress = nil) then
+    Exit;
   MessageDlg(_('The update check failed.') + LineEnding + LineEnding + AMessage + UpdateSourceNote, mtError,
     [mbOK], 0);
 end;
@@ -359,5 +515,10 @@ initialization
 
 finalization
   GDialogs.Free;
+  if GStartupCheck <> nil then
+  begin
+    GStartupCheck.Timer.Free;
+    GStartupCheck.Free;
+  end;
 
 end.

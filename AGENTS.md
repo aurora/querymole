@@ -140,6 +140,9 @@ querymole.exe ... --selftest-dialog out.txt                              # drive
 querymole.exe -datadir <tmp> --shot-options <base>                        # options dialog -> <base>_default.png, _connections.png,
                                                                           #   _connection.png (first stored connection selected)
 querymole.exe -datadir <tmp> --shot-ssh out.png                         # SSH tunnel dialog, filled from the last stored connection
+querymole ... --start-disconnected --shot-main x.png [--connect-later]      # as if Cancel was clicked at start; with
+                                                                          #   -u/-p/-h/-P, --connect-later connects afterwards (ADR-0052)
+querymole.exe -datadir <tmp> --shot-update-question out.png             # the update question with its check boxes
 querymole ... --shot-main x.png --stress-schemata 90 out.txt              # schemata tree stress test (docs/linux-port.md)
 querymole ... --shot-main x.png --stop-and-edit 0 0 700 " LIMIT 5" out.txt # double click, run, stop, edit, run again
 querymole ... --shot-main x.png --sql "select ..." --menu-smoke run out.txt # click every menu entry, report exceptions

@@ -371,7 +371,11 @@ end;
 procedure TMainForm.PrepareGUI;
 
 begin
-  Caption := RevivalProductName + ' - ' + MySQLConn.GetConnectionCaption;
+  // revival: without a connection (ADR-0052) the title is the product's name alone
+  if MySQLConn.Connected then
+    Caption := RevivalProductName + ' - ' + MySQLConn.GetConnectionCaption
+  else
+    Caption := RevivalProductName;
 
   //Build the Section List
   BuildSectionTree;
@@ -1091,7 +1095,16 @@ procedure TMainForm.ReconnectMIClick(Sender: TObject);
 begin
   // First try to reconnect with the current user connection. If that fails ask the user for details.
   if not MySQLConn.Reconnect then
-    MySQLConn.ConnectToServer(True, True, True);
+    if MySQLConn.ConnectToServer(True, True, True) = 1 then
+    begin
+      // revival: a connection made later, e.g. after starting without one (ADR-0052): what the start does after
+      // connecting, the toolbars, the title and the schema tree
+      Caption := RevivalProductName + ' - ' + MySQLConn.GetConnectionCaption;
+      MessageToAllForms(WM_CONNECTION_ESTABLISHED, 0, 0);
+      if (SectionControls.CurrentSidebarSection <> nil) and
+        (SectionControls.CurrentSidebarSection.SectionForm is TQueryBrowserForm) then
+        TQueryBrowserForm(SectionControls.CurrentSidebarSection.SectionForm).SchemataFrame.ReloadSchemaTree;
+    end;
 end;
 
 //----------------------------------------------------------------------------------------------------------------------

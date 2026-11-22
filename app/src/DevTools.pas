@@ -4,7 +4,7 @@ unit DevTools;
 { Developer modes of the executable (not part of the original program):
 
     querymole --shot-connect out.png     show the connect dialog, save a screenshot of it (and out_details.png with
-                                         "Details >>" open), exit
+                                         "Details >>" open, out_connecting.png with the banner animation), exit
     querymole --selftest-test-connection <name> out.txt
                                          the connection manager's "Test" (ADR-0051) for the stored connection
                                          <name>: "ok: ..." or "failed: ..." in out.txt
@@ -178,6 +178,7 @@ end;
 procedure RunConnectDialogScreenshot(const FileName: String);
 var
   Dlg: TConnectToInstanceForm;
+  I: Integer;
 begin
   Dlg := TConnectToInstanceForm.Create(nil, True, False);
   try
@@ -188,6 +189,16 @@ begin
     CaptureWindowToPng(Dlg, FileName);
     Dlg.DetailsBtn.Click;
     CaptureWindowToPng(Dlg, ChangeFileExt(FileName, '') + '_details.png');
+    // the banner animation as while connecting (ADR-0052), a few frames in
+    Dlg.BannerBusy.Visible := True;
+    Dlg.BannerBusy.BringToFront;
+    Dlg.BannerBusy.Active := True;
+    for I := 1 to 10 do
+    begin
+      Application.ProcessMessages;
+      Sleep(50);
+    end;
+    CaptureWindowToPng(Dlg, ChangeFileExt(FileName, '') + '_connecting.png');
   finally
     Dlg.Free;
   end;

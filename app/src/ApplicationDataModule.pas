@@ -66,6 +66,11 @@ type
     ExportHeader: Boolean;
     ExportBOM: Boolean;
 
+    // revival: automatic update check (ADR-0052)
+    UpdateCheckOnStart: Boolean;           // off unless the user agrees
+    UpdateCheckAsked: Boolean;             // the one question at the first start was asked
+    UpdateDevelopmentVersions: WideString; // 'auto' (pre-releases while running one), '1', '0'
+
     AssociateFileExtensions: Boolean;
 
     ShowQueryBrowserSidebar: Boolean;
@@ -286,6 +291,10 @@ begin
   ExportHeader := True;
   ExportBOM := False;
 
+  UpdateCheckOnStart := False;
+  UpdateCheckAsked := False;
+  UpdateDevelopmentVersions := 'auto';
+
   AssociateFileExtensions := False;
 
   ShowDragTargetWindowOnAltPressedOnly := False;
@@ -414,6 +423,17 @@ begin
 
                   end
                   else
+                    // revival: ADR-0052; older releases ignore this group
+                    if (CompareText(OptionGroupName, 'Updates') = 0) then
+                    begin
+                      if (CompareText(OptionName, 'CheckOnStart') = 0) then
+                        UpdateCheckOnStart := (OptionValue = '1')
+                      else if (CompareText(OptionName, 'Asked') = 0) then
+                        UpdateCheckAsked := (OptionValue = '1')
+                      else if (CompareText(OptionName, 'DevelopmentVersions') = 0) then
+                        UpdateDevelopmentVersions := OptionValue;
+                    end
+                    else
                     // revival: ADR-0050; older releases ignore this group
                     if (CompareText(OptionGroupName, 'Export') = 0) then
                     begin
@@ -563,6 +583,15 @@ begin
     AddParam(OptionGroup, 'ExportLineBreaks', ExportLineBreaks);
     AddParam(OptionGroup, 'ExportHeader', IntToStr(Ord(ExportHeader)));
     AddParam(OptionGroup, 'ExportBOM', IntToStr(Ord(ExportBOM)));
+
+    //-----------------------------------------------
+    // revival: automatic update check (ADR-0052)
+    OptionGroup := TMYX_OPTION_GROUP.create('Updates');
+    Options.option_groups.Add(OptionGroup);
+
+    AddParam(OptionGroup, 'CheckOnStart', IntToStr(Ord(UpdateCheckOnStart)));
+    AddParam(OptionGroup, 'Asked', IntToStr(Ord(UpdateCheckAsked)));
+    AddParam(OptionGroup, 'DevelopmentVersions', UpdateDevelopmentVersions);
 
     //-----------------------------------------------
     //Create Option Group

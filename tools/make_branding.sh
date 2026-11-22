@@ -69,4 +69,23 @@ magick "$ROOT/assets/querymole-icon-animated.gif" -coalesce -alpha set -fuzz 12%
   -draw "color 0,%[fx:h-1] floodfill" -draw "color %[fx:w-1],%[fx:h-1] floodfill" \
   -resize 48x48 -background none -gravity center -extent 54x54 +append -strip "$OUT/busy.png"
 
-echo "written: $OUT/about.png $OUT/connect_header_qb.png $OUT/sakila.png $OUT/busy.png $OUT/querymole.ico $OUT/querymole.png"
+# Busy animation in the connect dialog's banner while it connects (ADR-0052): the same frames, at the banner icon's size
+# (50x50), each set on the banner's top right corner (61x61 from x 357, the icon at +5+5 as above), so the banner's
+# background stays; side by side in one strip of square frames for TAnimate.
+magick "$ROOT/assets/querymole-icon-animated.gif" -coalesce -alpha set -fuzz 12% -fill none \
+  -draw "color 0,0 floodfill" -draw "color %[fx:w-1],0 floodfill" \
+  -draw "color 0,%[fx:h-1] floodfill" -draw "color %[fx:w-1],%[fx:h-1] floodfill" \
+  -resize 50x50 -strip "$tmp/connect-frame-%02d.png"
+magick "$OUT/connect_header_qb.png" -crop 61x61+357+0 +repage "$tmp/connect-corner.png"
+# the corner without the still icon: the background column left of it, as for the header above
+magick "$tmp/connect-corner.png" \( "$SRC/connect_header_qb.png" -crop 1x61+360+0 +repage -scale '61x61!' \) \
+  -geometry +0+0 -composite "$tmp/connect-corner-empty.png"
+frames=()
+for f in "$tmp"/connect-frame-*.png; do
+  magick "$tmp/connect-corner-empty.png" "$f" -geometry +5+5 -composite "$f.corner.png"
+  frames+=("$f.corner.png")
+done
+magick "${frames[@]}" +append -strip "$OUT/connect_busy.png"
+
+echo "written: $OUT/about.png $OUT/connect_header_qb.png $OUT/sakila.png $OUT/busy.png $OUT/connect_busy.png" \
+  "$OUT/querymole.ico $OUT/querymole.png"

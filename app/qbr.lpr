@@ -29,6 +29,7 @@ var
   I: Integer;
   ExeDir: String;
   Res: Integer;
+  StartWithoutConnection: Boolean;
   ShotFile: String;
   K, J, P: Integer;
   PageList: TStringList;
@@ -194,6 +195,13 @@ begin
       RunSSHDialogScreenshot(ParamStr(I + 1));
       Exit;
     end
+    else if ParamStr(I) = '--shot-update-question' then
+    begin
+      ApplicationDM := TApplicationDM.Create(nil);
+      ApplicationDM.LoadOptions;
+      ShotUpdateQuestion(ParamStr(I + 1));
+      Exit;
+    end
     else if ParamStr(I) = '--selftest-dialog' then
     begin
       RunDialogConnectSelftest(ParamStr(I + 1));
@@ -225,10 +233,21 @@ begin
   if ApplicationDM.Options.StartScriptFile <> '' then
     Res := 1
   else
-    Res := MainForm.MySQLConn.ConnectToServer(True, True, True);
+  begin
+    StartWithoutConnection := False;
+    for I := 1 to ParamCount do
+      if ParamStr(I) = '--start-disconnected' then   // developer mode: as if Cancel was clicked
+        StartWithoutConnection := True;
+    if StartWithoutConnection then
+      Res := 0
+    else
+      Res := MainForm.MySQLConn.ConnectToServer(True, True, True);
+  end;
   Trace('connect result ' + IntToStr(Res));
 
-  if Res = 1 then
+  // revival: Cancel (or Skip, or a failed connect) opens the program without a connection instead of ending it;
+  // File > Connect connects later, and Help > Check for Updates works without a server (ADR-0052)
+  if (Res = 1) or not Application.Terminated then
   begin
     RegisterApplication(Application, MainForm.MySQLConn.GetConnectionCaption(False));
     try
@@ -244,6 +263,16 @@ begin
       // developer mode: let the window settle, write a screenshot and quit
       Trace('shot: show');
       MainForm.Show;
+      for I := 1 to ParamCount do
+        if ParamStr(I) = '--connect-later' then
+        begin
+          // started with --start-disconnected: a picture without a connection, then File > Reconnect, which connects
+          // with -u/-p/-h/-P (ADR-0052); the main screenshot shows the window after that
+          for K := 1 to 20 do begin Application.ProcessMessages; CheckSynchronize; Sleep(50); end;
+          CaptureWindowToPng(MainForm, ChangeFileExt(ShotFile, '') + '_disconnected.png');
+          MainForm.ReconnectMIClick(nil);
+          for K := 1 to 60 do begin Application.ProcessMessages; CheckSynchronize; Sleep(50); end;
+        end;
       for I := 1 to ParamCount - 1 do
         if ParamStr(I) = '--expand' then
         begin
@@ -439,6 +468,7 @@ begin
       Trace('shot: done');
       Exit;
     end;
+    ScheduleStartupUpdateCheck;   // revival: asks once, then checks quietly if allowed (ADR-0052)
     Application.Run;
     finally
       UnregisterApplication(Application);

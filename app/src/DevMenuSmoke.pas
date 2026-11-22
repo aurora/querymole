@@ -57,8 +57,17 @@ end;
 procedure TSmoke.CloseDialogs(Sender: TObject);
 var
   F: TCustomForm;
+  I: Integer;
 begin
   F := Screen.ActiveCustomForm;
+  // under Xvfb a modal form is not always the active one (the options dialog was not): look at all of them
+  if (F = nil) or not (fsModal in F.FormState) then
+    for I := Screen.CustomFormCount - 1 downto 0 do
+      if fsModal in Screen.CustomForms[I].FormState then
+      begin
+        F := Screen.CustomForms[I];
+        Break;
+      end;
   if (F <> nil) and (F <> Application.MainForm) and (fsModal in F.FormState) then
   begin
     Closed.Add(F.ClassName);

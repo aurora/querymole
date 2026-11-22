@@ -449,6 +449,14 @@ begin
   if FMySQLConn.Ping <> 0 then
     FMySQLConn.Reconnect;
 
+  // revival: the program may run without a connection (ADR-0052); the query thread needs one
+  if (FMySQLConn.UserConnection = nil) or not FMySQLConn.Connected then
+  begin
+    ShowModalDialog(_('Not Connected'), _('There is no connection to a server. Use File > Connect to connect.'),
+      myx_mtError, _('OK'));
+    Exit;
+  end;
+
   Edited := False;
 
   FreeResultSet;

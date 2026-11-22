@@ -175,6 +175,7 @@ type
   public
     PMySQL: Pointer;
     SSHRow: TSSHTunnelRow;   // revival: the SSH tunnel row under "Details >>" (ADR-0048)
+    BannerBusy: TAnimate;    // revival: the banner's QueryMole icon, animated while connecting (ADR-0052)
     User_Connection: TMYX_USER_CONNECTION;
 
     property AllowConnectionSkip: Boolean read FAllowConnectionSkip write FAllowConnectionSkip;
@@ -209,6 +210,13 @@ begin
   //Load resources
   PNGImage := LoadPNGImageFromResource('connection_dialog_header', HeaderImg);
   ConnectToInstanceAni.ResName := 'progress_indicator';
+  // revival: the QueryMole icon top right in the banner plays while connecting; its frames include the banner's
+  // corner (tools/make_branding.sh), so it covers the still icon exactly (ADR-0052)
+  BannerBusy := TAnimate.Create(Self);
+  BannerBusy.Parent := Self;
+  BannerBusy.SetBounds(HeaderImg.Left + 357, HeaderImg.Top, 61, 61);
+  BannerBusy.ResName := 'querymole_connect_busy';
+  BannerBusy.Visible := False;
 
   favorite_conns := TList.Create;
 
@@ -591,6 +599,9 @@ begin
   //Show animation
   ConnectToInstanceAni.Visible := True;
   ConnectToInstanceAni.Active := True;
+  BannerBusy.Visible := True;
+  BannerBusy.BringToFront;
+  BannerBusy.Active := True;
 
   //Disable controls
   EnableDisableControls(False);
@@ -696,6 +707,8 @@ begin
     //Stop and hide Animation
     ConnectToInstanceAni.Active := False;
     ConnectToInstanceAni.Visible := False;
+    BannerBusy.Active := False;
+    BannerBusy.Visible := False;
 
     //Enable Controls
     EnableDisableControls(True);
@@ -903,6 +916,8 @@ begin
 
   ConnectToInstanceAni.Active := False;
   ConnectToInstanceAni.Visible := False;
+  BannerBusy.Active := False;
+  BannerBusy.Visible := False;
 
   //accept -20 to ignore warning
   if(TConnectToInstanceThread(Sender).ConnectionResult=0)or
