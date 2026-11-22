@@ -39,6 +39,41 @@ default, in the original's style.
   progress bar (`--script`, `--expand`, `--sql` dev hooks). Also checked by screenshot or file output: EXPLAIN panel, edit/apply with server error, all five result exporters (CSV, HTML, XML, Excel, PLIST), table double click and drop, the edit/error message dialogs, options pages, text search, schema selection, RegEx importer. Not yet checked: real keyboard/mouse
   interaction, bookmarks, history, the console tab (`SqlCmdPanel` is not used by the Query Browser).
 
+## Road to 1.0.0
+
+Planned on 2026-11-22 (ADR-0055): 1.0.0 through `1.0.0-beta.N` (feature freeze) and `1.0.0-rc.N`; other databases,
+the modern icon set and further features come in minor releases after it.
+
+**Before 1.0.0-beta.1**
+- ADR statuses that no longer match the code, to be confirmed by the owner: built but "Proposed" — ADR-0014
+  (packaging), ADR-0048 (SSH tunnel), ADR-0049 and ADR-0050 (exports; merged, and the Windows build is checked by the
+  test workflow now), ADR-0051 (connection manager), ADR-0052 (start and updates), ADR-0053 (groups, SSH password);
+  "to be confirmed" — ADR-0016 (help from the server); unclear whether built — ADR-0029 (search fields).
+- `README.md`: status "Beta" instead of "Alpha" (the warning and the badge, which still names 0.1.0-alpha.2), the known
+  problems checked, the download section for a version that is no longer only pre-releases later.
+- Release notes `docs/release-notes/1.0.0-beta.1.md` (changes since 0.1.0-alpha.9: ADR-0052, ADR-0053, GTK2
+  removed, the actions on Node 24).
+- `VERSION` to `1.0.0-beta.1`, tag, release workflow.
+
+**During the beta (owner's manual tests)**
+- Windows: SSH tunnel with Pageant and with `.ppk` keys (OpenSSL 4), stored SSH password, the exports (CSV options,
+  TSV, JSON), the update question at the first start, starting without a connection, the connection manager's Test
+  and groups (context menu, drag and drop).
+- Linux: the desktop checklist of ADR-0044 (`docs/linux-manual-test.md`), the same items as on Windows where they
+  apply.
+- The update from 0.1.0-alpha.9 to 1.0.0-beta.1 on both platforms (the alpha.9 program has to find it).
+- Faults found: fixed on `master` and in the next beta or candidate.
+
+**1.0.0-rc.1 and 1.0.0**
+- No open fault that blocks the release; release notes for 1.0.0 summarise everything since 0.1.0-alpha.9.
+- `README.md` without the beta warning.
+
+**After 1.0.0 (minor releases)**
+- Other MySQL-protocol servers, Manticore first (ADR-0054).
+- The modern icon set (branch `design/modern-icons`; its ADR needs a free number before it is merged, master uses
+  0053 to 0055).
+- macOS (ADR-0039), PostgreSQL and others behind the driver seam (ADR-0010).
+
 ## Next (in this order)
 
 1. ~~Port the units of the connect dialog.~~ Done. Remaining for the dialog: the busy
