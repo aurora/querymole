@@ -50,6 +50,10 @@ the modern icon set and further features come in minor releases after it.
 - ~~`README.md`~~ for the beta (status, version badge, features, Windows installer).
 - ~~Release notes~~ `docs/release-notes/1.0.0-beta.1.md`; ~~`VERSION`~~ `1.0.0-beta.1`. Tagged and released (`v1.0.0-beta.1`).
 
+**1.0.0-beta.2** (prepared 2026-11-22): fixes since beta.1: utf8mb4 connection (ADR-0056), the grid's fetch speed,
+export disabled while loading, empty BLOBs, expression defaults in the table editor. Release notes
+`docs/release-notes/1.0.0-beta.2.md`; `VERSION` is `1.0.0-beta.2`. Left: tag and release workflow.
+
 **During the beta (owner's manual tests)**
 - Windows: SSH tunnel with Pageant and with `.ppk` keys (OpenSSL 4), stored SSH password, the exports (CSV options,
   TSV, JSON), the update question at the first start, starting without a connection, the connection manager's Test

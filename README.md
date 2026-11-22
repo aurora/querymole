@@ -9,7 +9,7 @@
 
 <p align="center">
   <img alt="Status: beta" src="https://img.shields.io/badge/status-beta-yellow">
-  <img alt="Version 1.0.0-beta.1" src="https://img.shields.io/badge/version-1.0.0--beta.1-blue">
+  <img alt="Version 1.0.0-beta.2" src="https://img.shields.io/badge/version-1.0.0--beta.2-blue">
   <img alt="Licence: GPL-2.0-or-later" src="https://img.shields.io/badge/licence-GPL--2.0--or--later-green">
   <img alt="Free Pascal / Lazarus" src="https://img.shields.io/badge/built%20with-Free%20Pascal%20%2F%20Lazarus-informational">
 </p>
