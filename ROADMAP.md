@@ -54,6 +54,10 @@ the modern icon set and further features come in minor releases after it.
 export disabled while loading, empty BLOBs, expression defaults in the table editor. Release notes
 `docs/release-notes/1.0.0-beta.2.md`; `VERSION` is `1.0.0-beta.2`. Left: tag and release workflow.
 
+**1.0.0-beta.3** (2026-11-22): Windows: Cancel in the connect dialog ended the program (OS error 6 after
+`connect result 0`); a failed instance registration is now ignored and traced. Notes
+`docs/release-notes/1.0.0-beta.3.md`.
+
 **During the beta (owner's manual tests)**
 - Windows: SSH tunnel with Pageant and with `.ppk` keys (OpenSSL 4), stored SSH password, the exports (CSV options,
   TSV, JSON), the update question at the first start, starting without a connection, the connection manager's Test
