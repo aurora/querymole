@@ -249,7 +249,15 @@ begin
   // File > Connect connects later, and Help > Check for Updates works without a server (ADR-0052)
   if (Res = 1) or not Application.Terminated then
   begin
-    RegisterApplication(Application, MainForm.MySQLConn.GetConnectionCaption(False));
+    // The instance list only feeds the Window menu: failing to create it must never end the program
+    Trace('registering the instance');
+    try
+      RegisterApplication(Application, MainForm.MySQLConn.GetConnectionCaption(False));
+    except
+      on E: Exception do
+        Trace('instance registration failed: ' + E.ClassName + ': ' + E.Message);
+    end;
+    Trace('instance registered');
     try
     MainForm.PrepareGUI;
     {$IFNDEF MSWINDOWS}AdjustMenuBar(MainForm);{$ENDIF}   // Port: see unit QtStyle (Qt6 only)

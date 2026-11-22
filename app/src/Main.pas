@@ -184,7 +184,7 @@ var
 implementation
 
 uses
-  ApplicationDataModule, MyxError, PNGTools, UpdateCheck{$IFNDEF MSWINDOWS}, AppFonts{$ENDIF};
+  ApplicationDataModule, MyxError, PNGTools, UpdateCheck, DevTools{$IFNDEF MSWINDOWS}, AppFonts{$ENDIF};
 
 {$R ../forms/Main.lfm}
 
@@ -378,12 +378,16 @@ begin
     Caption := RevivalProductName;
 
   //Build the Section List
+  Trace('prepare: section tree');
   BuildSectionTree;
 
+  Trace('prepare: show section');
   ShowSection(0);
 
+  Trace('prepare: menu items');
   UpdateMenuItems;
 
+  Trace('prepare: file types');
   if (ApplicationDM.Options.AssociateFileExtensions) then
   begin
     RegisterFileType('qbquery', Application.ExeName, 1, '"-qb %1"');
