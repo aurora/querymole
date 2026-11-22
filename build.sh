@@ -10,7 +10,7 @@
 # Windows needs Lazarus in C:\lazarus and MSYS2 mingw64 in C:\msys64; Linux needs the
 # "freepascal" container from tools/distrobox-setup.sh (see AGENTS.md); macOS needs Homebrew and Lazarus
 # (tools/macos-setup.sh, docs/macos-setup.md). The widgetset can be chosen with QBR_WIDGETSET (Linux:
-# qt6|gtk2|qt5, default qt6 (ADR-0044); macOS: default cocoa); QBR_BACKEND_BUILD names another
+# qt6|qt5, default qt6 (ADR-0044; GTK2 was removed after 0.1.0-alpha.9); macOS: default cocoa); QBR_BACKEND_BUILD names another
 # backend build directory (tools/package-appimage.sh links against the one built in the older container).
 # macOS only: LAZARUS_DIR (default /Applications/Lazarus), HOMEBREW_PREFIX (default /opt/homebrew),
 # QBR_FPC_OPTS (extra compiler options, appended to the ones below).
@@ -63,7 +63,12 @@ else
   export LD_LIBRARY_PATH="$BACKEND_BUILD${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
   # the Linux linker resolves the backend libraries at link time
   LAZBUILD=(lazbuild "--opt=-Fl$BACKEND_BUILD")
-  # Qt6 since ADR-0044; the project file keeps the LCL's default (gtk2), which Windows and macOS do not use
+  # Qt6 since ADR-0044; the project file keeps the LCL's default (gtk2), which Windows and macOS do not use. The
+  # GTK2-specific code was removed after 0.1.0-alpha.9 as ADR-0044 planned: a GTK2 build would compile but be laid out
+  # wrongly
+  case "${QBR_WIDGETSET:-qt6}" in
+    gtk2) echo "GTK2 is no longer supported (ADR-0044); use qt6" >&2; exit 2 ;;
+  esac
   LAZBUILD+=("--ws=${QBR_WIDGETSET:-qt6}")
 fi
 

@@ -1,6 +1,6 @@
 # ADR-0023 — Pin GTK's dpi setting to 96 on Linux
 
-- Status: Accepted (implemented for GTK2; checked by the author on a scaled KDE desktop)
+- Status: Deprecated (implemented for GTK2; removed with GTK2 after 0.1.0-alpha.9, ADR-0044: Qt6 scales itself)
 - Date: 2026-10-31
 - Deciders: Harald Lapp (project owner)
 

@@ -292,7 +292,7 @@ begin
     OptionPageControl.Height := OptionPageControl.Height - 16;
     HeaderPnl.BringToFront;
     {$IFNDEF MSWINDOWS}
-    HidePageControlTabs(Self, OptionPageControl);   // Port: GTK2 tabs are taller than the 16 pixels HeaderPnl covers
+    HidePageControlTabs(Self, OptionPageControl);   // Port: the pages would start above the 16 pixels HeaderPnl covers
     {$ENDIF}
 
     Height := Height - 16;

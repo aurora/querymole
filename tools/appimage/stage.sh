@@ -1,28 +1,22 @@
 #!/bin/sh
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Assembles the AppDir of the Linux AppImage. Runs INSIDE the qbr-appimage-el9 container (glibc 2.34), started by
-# tools/package-appimage.sh with the repository at /src and the output folder at /out. QBR_WIDGETSET (qt6, the default,
-# or gtk2) names the widgetset app/bin/querymole was built with; Qt 6 or GTK2 is bundled accordingly.
+# tools/package-appimage.sh with the repository at /src and the output folder at /out. app/bin/querymole must be the
+# Qt6 build (ADR-0044); Qt 6 is bundled with it.
 #
 # Everything the program needs besides the C library, the X11 core, the font stack and libstdc++ is copied from the
-# container, so the result does not depend on what the host has (GTK2 is not installed by default any more, Qt 6 is not
-# everywhere and not in the version the program needs).
+# container, so the result does not depend on what the host has (Qt 6 is not everywhere and not in the version the
+# program needs).
 set -eu
 
 SRC=/src
 APPDIR=/out/AppDir
 BACKEND=$SRC/backend/build-el9
-WIDGETSET=${QBR_WIDGETSET:-qt6}
 QTPLUGINS=/usr/lib64/qt6/plugins
 
-# the program must be the one of this widgetset (app/bin holds the last one built)
-case "$WIDGETSET" in
-  gtk2) needed=libgtk-x11-2.0 ;;
-  qt6)  needed=libQt6Pas ;;
-  *) echo "unknown widgetset: $WIDGETSET" >&2; exit 2 ;;
-esac
-readelf -d "$SRC/app/bin/querymole" | grep -q "NEEDED.*\[$needed" \
-  || { echo "app/bin/querymole was not built with $WIDGETSET (no $needed)" >&2; exit 1; }
+# the program must be the Qt6 build (app/bin holds the last one built)
+readelf -d "$SRC/app/bin/querymole" | grep -q "NEEDED.*\[libQt6Pas" \
+  || { echo "app/bin/querymole was not built with Qt6 (no libQt6Pas)" >&2; exit 1; }
 
 rm -rf "$APPDIR"
 mkdir -p "$APPDIR/usr/bin" "$APPDIR/usr/lib"
@@ -36,32 +30,24 @@ done
 cp "$SRC/LICENSE" "$SRC/NOTICE" "$APPDIR/"
 
 # Connector/C authentication plugins (caching_sha2_password for MySQL 8+, ...; the Kerberos one would drag in krb5)
-GTKVER=2.10.0
 mkdir -p "$APPDIR/usr/lib/mariadb/plugin"
-if [ "$WIDGETSET" = gtk2 ]; then
-  # GTK2 theme engine (the default theme needs none, a user's gtkrc may name "pixmap"), image loaders
-  mkdir -p "$APPDIR/usr/lib/gtk-2.0/$GTKVER/engines" "$APPDIR/usr/lib/gdk-pixbuf-2.0/$GTKVER/loaders"
-  cp /usr/lib64/gtk-2.0/$GTKVER/engines/libpixmap.so "$APPDIR/usr/lib/gtk-2.0/$GTKVER/engines/"
-  for l in bmp gif ico pnm tga xbm xpm; do
-    cp /usr/lib64/gdk-pixbuf-2.0/$GTKVER/loaders/libpixbufloader-$l.so "$APPDIR/usr/lib/gdk-pixbuf-2.0/$GTKVER/loaders/"
-  done
-else
-  # the binding built by build-qt6pas.sh, and the Qt plugins a widget program needs: the X11 and Wayland platforms
-  # (with Wayland's shell, decoration and graphics parts, and OpenGL on X11), compose and IBus input. No style or
-  # platform theme plugins: the program sets Fusion, which is built in (ADR-0045). The image loaders are not needed
-  # either, the LCL reads its pictures itself.
-  cp -L "$BACKEND/qt6pas/libQt6Pas.so.6" "$APPDIR/usr/lib/"
-  mkdir -p "$APPDIR/usr/lib/qt6/plugins/platforms" "$APPDIR/usr/lib/qt6/plugins/platforminputcontexts"
-  cp "$QTPLUGINS"/platforms/libqxcb.so "$QTPLUGINS"/platforms/libqwayland*.so "$APPDIR/usr/lib/qt6/plugins/platforms/"
-  for c in xcbglintegrations wayland-shell-integration wayland-decoration-client wayland-graphics-integration-client; do
-    [ -d "$QTPLUGINS/$c" ] && cp -r "$QTPLUGINS/$c" "$APPDIR/usr/lib/qt6/plugins/"
-  done
-  cp "$QTPLUGINS"/platforminputcontexts/libcomposeplatforminputcontextplugin.so \
-     "$QTPLUGINS"/platforminputcontexts/libibusplatforminputcontextplugin.so "$APPDIR/usr/lib/qt6/plugins/platforminputcontexts/"
-  # Qt finds its plugins through qt.conf next to the program; QT_PLUGIN_PATH would leak into the programs the
-  # application starts
-  printf '[Paths]\nPrefix = ..\nPlugins = lib/qt6/plugins\n' > "$APPDIR/usr/bin/qt.conf"
-fi
+
+# the binding built by build-qt6pas.sh, and the Qt plugins a widget program needs: the X11 and Wayland platforms
+# (with Wayland's shell, decoration and graphics parts, and OpenGL on X11), compose and IBus input. No style or
+# platform theme plugins: the program sets Fusion, which is built in (ADR-0045). The image loaders are not needed
+# either, the LCL reads its pictures itself.
+cp -L "$BACKEND/qt6pas/libQt6Pas.so.6" "$APPDIR/usr/lib/"
+mkdir -p "$APPDIR/usr/lib/qt6/plugins/platforms" "$APPDIR/usr/lib/qt6/plugins/platforminputcontexts"
+cp "$QTPLUGINS"/platforms/libqxcb.so "$QTPLUGINS"/platforms/libqwayland*.so "$APPDIR/usr/lib/qt6/plugins/platforms/"
+for c in xcbglintegrations wayland-shell-integration wayland-decoration-client wayland-graphics-integration-client; do
+  [ -d "$QTPLUGINS/$c" ] && cp -r "$QTPLUGINS/$c" "$APPDIR/usr/lib/qt6/plugins/"
+done
+cp "$QTPLUGINS"/platforminputcontexts/libcomposeplatforminputcontextplugin.so \
+   "$QTPLUGINS"/platforminputcontexts/libibusplatforminputcontextplugin.so "$APPDIR/usr/lib/qt6/plugins/platforminputcontexts/"
+# Qt finds its plugins through qt.conf next to the program; QT_PLUGIN_PATH would leak into the programs the
+# application starts
+printf '[Paths]\nPrefix = ..\nPlugins = lib/qt6/plugins\n' > "$APPDIR/usr/bin/qt.conf"
+
 # libssh built by build-libssh.sh (AlmaLinux 9's 0.10 is too old, ADR-0048), when the program or the backend uses it;
 # copied before the closure so that ldd does not take the system's copy
 if [ -n "$(for f in "$SRC/app/bin/querymole" "$BACKEND"/*.so; do readelf -d "$f"; done | grep 'NEEDED.*\[libssh\.so')" ]; then
@@ -114,20 +100,13 @@ patchelf --set-rpath '$ORIGIN/../lib' "$APPDIR/usr/bin/querymole"
 for f in "$APPDIR"/usr/lib/*.so "$APPDIR"/usr/lib/*.so.*; do
   patchelf --set-rpath '$ORIGIN' "$f"
 done
-for f in "$APPDIR"/usr/lib/gtk-2.0/$GTKVER/engines/*.so "$APPDIR"/usr/lib/gdk-pixbuf-2.0/$GTKVER/loaders/*.so \
-         "$APPDIR"/usr/lib/qt6/plugins/*/*.so; do
+for f in "$APPDIR"/usr/lib/qt6/plugins/*/*.so; do
   [ -e "$f" ] || continue
   patchelf --set-rpath '$ORIGIN/../../..' "$f"
 done
 for f in "$APPDIR"/usr/lib/mariadb/plugin/*.so; do
   patchelf --set-rpath '$ORIGIN/../..' "$f"
 done
-
-# image loader cache with a placeholder that AppRun replaces by the mount point
-if [ "$WIDGETSET" = gtk2 ]; then
-  gdk-pixbuf-query-loaders-64 "$APPDIR"/usr/lib/gdk-pixbuf-2.0/$GTKVER/loaders/*.so \
-    | sed "s|$APPDIR|@APPDIR@|g" > "$APPDIR/usr/lib/gdk-pixbuf-2.0/$GTKVER/loaders.cache.in"
-fi
 
 # what was bundled and under which licence (the package database of the container knows)
 mkdir -p "$APPDIR/licenses/rpm"
@@ -143,8 +122,7 @@ mkdir -p "$APPDIR/licenses/rpm"
     case "$base" in libssh.so*) echo "$rel | libssh $(cat "$BACKEND/libssh/VERSION"), built from https://www.libssh.org/ | LGPL-2.1-or-later (licenses/libssh/COPYING)"; continue ;; esac
     case "$base" in libQt6Pas.so*) echo "$rel | Free Pascal Qt6 binding $(sed -n 's/^else:VERSION = //p' $SRC/tools/cache/qt6pas-src/Qt6Pas.pro), built from the Lazarus sources | LGPL with linking exception (licenses/qt6pas/COPYING.TXT)"; continue ;; esac
     # the copy keeps the name of the soname link, the package owns the real file
-    owner=$(rpm -qf "$(ls /usr/lib64/$base /usr/lib64/gtk-2.0/$GTKVER/engines/$base /usr/lib64/gdk-pixbuf-2.0/$GTKVER/loaders/$base \
-            /usr/lib64/mariadb/plugin/$base $QTPLUGINS/*/$base 2>/dev/null | head -1)" --qf '%{NAME}' 2>/dev/null || true)
+    owner=$(rpm -qf "$(ls /usr/lib64/$base /usr/lib64/mariadb/plugin/$base $QTPLUGINS/*/$base 2>/dev/null | head -1)" --qf '%{NAME}' 2>/dev/null || true)
     if [ -z "$owner" ]; then echo "$rel | unknown package"; continue; fi
     echo "$rel | $(rpm -q "$owner" --qf '%{NAME}-%{VERSION}-%{RELEASE} | %{LICENSE}')"
   done
@@ -158,9 +136,7 @@ for pkg in $(grep -o '| [A-Za-z0-9_+.-]*-[0-9][^ ]* |' "$APPDIR/THIRD-PARTY-LIBS
   done
 done
 
-if [ "$WIDGETSET" = qt6 ]; then
-  mkdir -p "$APPDIR/licenses/qt6pas"
-  cp "$SRC/tools/cache/qt6pas-src/COPYING.TXT" "$APPDIR/licenses/qt6pas/"
-fi
+mkdir -p "$APPDIR/licenses/qt6pas"
+cp "$SRC/tools/cache/qt6pas-src/COPYING.TXT" "$APPDIR/licenses/qt6pas/"
 
 echo "staged $APPDIR ($(du -sh "$APPDIR" | cut -f1))"

@@ -157,12 +157,11 @@ procedure SizeLabelToCaption(ALabel: TLabel);
 
 {$IFNDEF MSWINDOWS}
 // Port: the original hides the tab strip of a page control by covering it with a panel (TabHeight is 1 to 16
-// there). GTK2 tabs are taller and show through, so the tabs are switched off and the control moved down by the
-// height of the strip, which keeps the pages where the original has them. GTK2 knows the height of the strip only
-// when the control is shown: this is done after the form's first OnShow, or at once if the form is visible already
-// (the control must be visible, so a hidden group box needs the call when it is opened). A given Strip is the
-// height to move the control down by, and is applied at once; the original's strip is thin (TabHeight 1 to 3)
-// where its page starts right below the control.
+// there). Under Qt6 the pages would start higher than in the original and the panel would cut into them, so the tabs
+// are switched off and the control moved down by the height of the strip, which keeps the pages where the original
+// has them. A given Strip is the height to move the control down by; without one, the original's strip (TabHeight
+// plus its 4 pixel border) is taken. The original's strip is thin (TabHeight 1 to 3) where its page starts right
+// below the control.
 procedure HidePageControlTabs(Form: TCustomForm; PC: TPageControl; Strip: Integer = -1);
 {$ENDIF}
 
@@ -197,7 +196,7 @@ var
 implementation
 
 uses
-  TntWindows, Types, PNGTools{$IFNDEF MSWINDOWS}, Process, AppFonts{$ENDIF}{$IFDEF LCLGTK2}, gtk2{$ENDIF}{$IFDEF LCLQT6}, QtStyle{$ENDIF};
+  TntWindows, Types, PNGTools{$IFNDEF MSWINDOWS}, Process, AppFonts{$ENDIF}{$IFDEF LCLQT6}, QtStyle{$ENDIF};
 
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -1243,92 +1242,18 @@ end;
 //----------------------------------------------------------------------------------------------------------------------
 
 {$IFNDEF MSWINDOWS}
-type
-  TPageControlTabHider = class(TComponent)
-  private
-    FPageControl: TPageControl;
-    procedure FormShow(Sender: TObject);
-    procedure Run(Data: PtrInt);
-  public
-    destructor Destroy; override;
-  end;
-
-destructor TPageControlTabHider.Destroy;
-
-begin
-  Application.RemoveAsyncCalls(Self);
-  inherited;
-end;
-
-//----------------------------------------------------------------------------------------------------------------------
-
-procedure TPageControlTabHider.FormShow(Sender: TObject);
-
-begin
-  Application.QueueAsyncCall(Run, 0);
-end;
-
-//----------------------------------------------------------------------------------------------------------------------
-
-procedure TPageControlTabHider.Run(Data: PtrInt);
-
-var
-  Strip: Integer;
-
-begin
-  // The page widget starts below the tab strip and the border of the notebook; without tabs only the border is left.
-  {$IFDEF LCLGTK2}
-  Strip := PGtkWidget(FPageControl.ActivePage.Handle)^.allocation.y - PGtkWidget(FPageControl.Handle)^.allocation.y - 2;
-  {$ELSE}
-  Strip := 0;
-  {$ENDIF}
-  FPageControl.ShowTabs := False;
-  if Strip > 0 then
-  begin
-    FPageControl.Top := FPageControl.Top + Strip;
-    FPageControl.Height := FPageControl.Height - Strip;
-  end;
-end;
-
-//----------------------------------------------------------------------------------------------------------------------
-
 procedure HidePageControlTabs(Form: TCustomForm; PC: TPageControl; Strip: Integer);
 
-var
-  Hider: TPageControlTabHider;
-
 begin
-  // GTK2 draws tabs taller than the strip the original covers (ADR-0024); Qt6 draws the tab row exactly TabHeight
-  // high, without the border the original's tab control adds, so the pages started higher and the covering panel cut
-  // into their first row (connect dialog, "Use compression protocol"). Both get the tabs switched off and the page
-  // control moved down by the strip; Qt6 takes the original's strip, TabHeight plus the 4 pixel border, when none is
-  // given. Other widgetsets are left alone.
+  // Qt6 draws the tab row exactly TabHeight high, without the border the original's tab control adds, so the pages
+  // started higher and the covering panel cut into their first row (connect dialog, "Use compression protocol"). The
+  // tabs are switched off and the page control moved down by the strip; other widgetsets are left alone.
   {$IFDEF LCLQT6}
   if Strip < 0 then
     Strip := PC.TabHeight + 4;
   PC.ShowTabs := False;
   PC.Top := PC.Top + Strip;
   PC.Height := PC.Height - Strip;
-  {$ENDIF}
-  {$IFDEF LCLGTK2}
-  if Strip >= 0 then
-  begin
-    PC.ShowTabs := False;
-    PC.Top := PC.Top + Strip;
-    PC.Height := PC.Height - Strip;
-    Exit;
-  end;
-
-  if Form.FindComponent('TabHider' + PC.Name) <> nil then
-    Exit;
-
-  Hider := TPageControlTabHider.Create(Form);
-  Hider.Name := 'TabHider' + PC.Name;
-  Hider.FPageControl := PC;
-  if Form.Visible then
-    Application.QueueAsyncCall(Hider.Run, 0)
-  else
-    Form.AddHandlerFirstShow(Hider.FormShow);
   {$ENDIF}
 end;
 {$ENDIF}

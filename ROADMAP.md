@@ -67,7 +67,7 @@ default, in the original's style.
    servers (`tests/run-matrix.sh`); `build.sh` and the tools run there. The Linux release is an AppImage
    (`tools/package-appimage.sh`, ADR-0027); with `--velopack` it updates itself (ADR-0037, update cycle
    verified through the GitHub releases on Linux and Windows, 0.1.0-alpha.3 to alpha.5). The application compiles
-   with Qt6 (the default since 2026-11-20, ADR-0044; Fusion style, ADR-0045) and still with GTK2, connects on all six servers, and the main window's features (results, editing,
+   with Qt6 (since 2026-11-20, ADR-0044; Fusion style, ADR-0045; GTK2 removed after 0.1.0-alpha.9), connects on all six servers, and the main window's features (results, editing,
    scripts, export, dialogs, help) work by screenshot. State and next steps: `docs/linux-port.md`.
    macOS is deferred (ADR-0039): the first Cocoa build runs but its dialogs are cut off; it waits for the
    widgetset decision of the Qt move (ADR-0024). State: `docs/macos-setup.md`.
@@ -81,7 +81,7 @@ default, in the original's style.
 - Idle CPU on Linux: `TMainForm.HandleIdle` (`Main.pas`) asks the clipboard for text on every idle pass to
   enable Paste; under GTK2 each call is an X round trip with a nested main loop. Under Qt6 (2026-11-20): connected
   and idle about 1 % CPU, 3.5 % while the mouse moves (Xvfb); Qt's xcb clipboard keeps a foreign owner's format list
-  until the owner changes. Left for GTK2 only, which goes away after this release cycle (ADR-0044).
+  until the owner changes. Was a GTK2 problem only; GTK2 was removed after 0.1.0-alpha.9 (ADR-0044).
   Loading ~2 million rows (the unresponsive instance of 2026-11-17) was slow for another reason, fixed on 2026-11-20:
   the result grid sorted all rows after every fetched block (laz.VirtualTrees' default `toAutoSort`, see
   `VTCompat`); 2 million rows now load in about a minute with the window answering throughout. That this was the

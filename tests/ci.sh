@@ -6,9 +6,8 @@
 #   tests/ci.sh [--only mysql:8.4,mariadb:11.4]
 #
 # 1. builds the image tests/ci/Containerfile (rebuilt when the file changes);
-# 2. in it: the backend (backend/build-linux), the program with GTK2 (only to check that it still compiles,
-#    ADR-0044 keeps it buildable) and then with Qt6 (app/bin/querymole, the one that is tested), the runtime files
-#    and the FPCUnit tests (tests/bin/qbr_tests);
+# 2. in it: the backend (backend/build-linux), the program with Qt6 (app/bin/querymole), the runtime files and the
+#    FPCUnit tests (tests/bin/qbr_tests);
 # 3. tests/run-matrix.sh on this machine: it starts the servers with podman here and runs the tests and the
 #    program's self-tests in the image (QBR_EXEC), on the host's network.
 set -euo pipefail
@@ -22,7 +21,7 @@ podman image exists "$IMAGE" || podman build -t "$IMAGE" -f "$ROOT/tests/ci/Cont
 # programs through `timeout`, which fails silently (exit 125) as the container's process 1 (coreutils 9.10)
 in_image=(podman run --rm --init --network host --security-opt label=disable -v "$ROOT:$ROOT" -w "$ROOT" "$IMAGE")
 
-echo "== build (backend, GTK2 check, Qt6, tests)"
+echo "== build (backend, Qt6, tests)"
 # in GitHub Actions a failed build also becomes an error annotation with the end of its output (readable without
 # signing in, unlike the log)
 mkdir -p "$ROOT/tests/tmp"
@@ -39,10 +38,7 @@ trap build_failed ERR
   cmake --build backend/build-linux | tail -1
   # no binary of an earlier build may stand in for one that failed to build
   rm -f app/bin/querymole tests/bin/qbr_tests
-  QBR_WIDGETSET=gtk2 ./build.sh --runtime 2>&1 | grep -E -i "^built:| error|fatal" || true
-  readelf -d app/bin/querymole | grep -q "libgtk-x11-2.0" || { echo "GTK2 build failed" >&2; exit 1; }
-  rm -f app/bin/querymole
-  QBR_WIDGETSET=qt6 ./build.sh 2>&1 | grep -E -i "^built:| error|fatal" || true
+  QBR_WIDGETSET=qt6 ./build.sh --runtime 2>&1 | grep -E -i "^built:| error|fatal" || true
   readelf -d app/bin/querymole | grep -q "libQt6Pas" || { echo "Qt6 build failed" >&2; exit 1; }
   units=$(ls -d /usr/lib64/fpc/*/units/x86_64-linux/fcl-fpcunit | head -1)
   mkdir -p tests/lib tests/bin

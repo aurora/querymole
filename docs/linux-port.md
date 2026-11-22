@@ -272,6 +272,15 @@ libQt6Pas build directory (`actions/cache`, keyed by the Containerfiles and `bui
   Wayland socket are visible there, so Qt opens the window on the real desktop and an Xvfb screenshot stays black.
 Still open from ADR-0044: the desktop checklist (`docs/linux-manual-test.md`, Wayland dragging above).
 
+**GTK2 removed (2026-11-22, after 0.1.0-alpha.9).** Three Qt6 releases later (alpha.6 to alpha.9), as ADR-0044
+planned: the `{$IFDEF LCLGTK2}` code (the GTK2 tab hider in `AuxFuncs`, the connect dialog's GTK2 case), the dpi pin
+of ADR-0023 (`app/compat/GtkDpi.pas`), the GTK2 parts of the AppImage scripts (`stage.sh`, `AppRun`, the GTK packages
+in `tools/appimage/Containerfile`) and the GTK2 compile check of `tests/ci.sh`. `./build.sh` refuses
+`QBR_WIDGETSET=gtk2`. Workarounds outside `{$IFDEF LCLGTK2}` that were found under GTK2 but apply to every non-Windows
+build (VTCompat's scrolling and scroll bar changes, the PNG reader, the search edit) stay. The sections above that
+describe GTK2 are history. `tools/distrobox-setup.sh` still installs the LCL for GTK2: plain `lazbuild` (tools such
+as `lfmview`) uses it as the default widgetset.
+
 Reproducing under Xvfb with an open menu or list: start the program, then `xdotool` (`key alt+e`, or a click on the
 combo box arrow) and `import -window root` (both in the freepascal container). A connect dialog with stored
 connections needs a `mysqlx_user_connections.xml` in the data folder (`user_connection` elements with

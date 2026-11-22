@@ -60,11 +60,11 @@ the host. Work inside with `distrobox enter freepascal`.
   run it.
 - Console programs need `cwstring` in their `uses` on Unix, otherwise `String`/`WideString`
   conversions mangle non-ASCII text (LCL programs get it through LazUTF8).
-- On Linux `./build.sh` and `tools/package-appimage.sh` build with Qt6 (default since 2026-11-20, ADR-0044; Fusion
-  style, ADR-0045); `QBR_WIDGETSET=gtk2` still builds the GTK2 version, kept buildable for one release cycle. Plain
-  `lazbuild app/qbr.lpi` uses the LCL's default (gtk2) on Linux; pass `--ws=qt6`. Units go to
-  `app/lib/<cpu>-<os>-<widgetset>`; the program in `app/bin` is the last one built. Qt6-only code is guarded with `{$IFDEF LCLQT6}`, GTK2-only code with
-  `{$IFDEF LCLGTK2}` (ADR-0024). Run Qt programs with `QT_QPA_PLATFORM=xcb` and `WAYLAND_DISPLAY` unset inside the
+- On Linux the program is built with Qt6 only (ADR-0044; Fusion style, ADR-0045): `./build.sh` and
+  `tools/package-appimage.sh` pass `--ws=qt6`. The GTK2 version and its code were removed after 0.1.0-alpha.9, as
+  ADR-0044 planned; `./build.sh` refuses `QBR_WIDGETSET=gtk2`. Plain `lazbuild app/qbr.lpi` still uses the LCL's default
+  (gtk2) on Linux; pass `--ws=qt6`. Units go to `app/lib/<cpu>-<os>-<widgetset>`; the program in `app/bin` is the last
+  one built. Qt6-only code is guarded with `{$IFDEF LCLQT6}`. Run Qt programs with `QT_QPA_PLATFORM=xcb` and `WAYLAND_DISPLAY` unset inside the
   distrobox, otherwise their windows open on the real desktop. State and open problems of the port are in
   `docs/linux-port.md`. Windows-only code is guarded with `{$IFDEF MSWINDOWS}` and a `// Port:`
   comment; Windows names the LCL has under another name go into `app/compat/WinAliases.pas` (only
@@ -94,7 +94,6 @@ tools/package-appimage.sh [--no-build]           # Linux AppImage in dist/, run 
                                                  #   freepascal distrobox and tools/cache/appimagetool-x86_64.AppImage)
 tools/package-appimage.sh --velopack             # plus the self-updating AppImage and feed in dist/Releases-linux (ADR-0037;
                                                  #   needs vpk in tools/cache/vpk, see the script header)
-QBR_WIDGETSET=gtk2 tools/package-appimage.sh    # the AppImage with GTK2 instead of Qt6 (the default, ADR-0044)
 QBR_FPC_IMAGE=qbr-fpc-f44 tools/package-appimage.sh   # the same without distrobox (plain container, used by CI)
 git tag v$(cat VERSION) && git push origin v$(cat VERSION)   # release: GitHub Actions builds Windows + Linux and
                                                  #   publishes them (.github/workflows/release.yml, ADR-0040)

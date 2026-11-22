@@ -5,8 +5,6 @@
 #
 #   tools/package-appimage.sh              build everything, write dist/QueryMole-<version>-x86_64.AppImage
 #   tools/package-appimage.sh --no-build   reuse app/bin/querymole and backend/build-el9, only stage and pack
-#   QBR_WIDGETSET=gtk2 tools/package-appimage.sh  the same with the GTK2 widgetset (bundles GTK2 instead of Qt 6 and
-#                                          libQt6Pas); the default is qt6 since ADR-0044
 #   tools/package-appimage.sh --velopack   additionally pack the same AppDir with `vpk pack` (ADR-0037): an AppImage
 #                                          that updates itself, plus the update feed, in dist/Releases-linux
 #
@@ -20,10 +18,10 @@
 #    every distribution with that glibc or a newer one (RHEL 9, Ubuntu 22.04, Debian 12, Fedora 44, ...);
 # 2. the Pascal program is built in the freepascal container against that backend (the program itself needs no
 #    glibc newer than 2.34);
-#    For Qt6, libQt6Pas is built in the AlmaLinux 9 container first (tools/appimage/build-qt6pas.sh) from the binding
+#    libQt6Pas is built in the AlmaLinux 9 container first (tools/appimage/build-qt6pas.sh) from the binding
 #    sources of the Lazarus in the freepascal container; libssh (tools/appimage/build-libssh.sh) too, since
 #    AlmaLinux 9's is too old for ADR-0048;
-# 3. tools/appimage/stage.sh collects the program, the backend, GTK2 or Qt 6 and the other libraries in an AppDir;
+# 3. tools/appimage/stage.sh collects the program, the backend, Qt 6 (ADR-0044) and the other libraries in an AppDir;
 # 4. appimagetool (downloaded once to tools/cache/) packs it.
 #
 # Without distrobox (CI, .github/workflows/release.yml): QBR_FPC_IMAGE=<name> runs step 2 in a plain podman
@@ -34,8 +32,6 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TOOL="$ROOT/tools/cache/appimagetool-x86_64.AppImage"
 # the image is rebuilt when its Containerfile changes
 IMAGE=qbr-appimage-el9:$(sha256sum "$ROOT/tools/appimage/Containerfile" | cut -c1-12)
-WIDGETSET="${QBR_WIDGETSET:-qt6}"
-case "$WIDGETSET" in gtk2|qt6) ;; *) echo "QBR_WIDGETSET must be gtk2 or qt6, not $WIDGETSET" >&2; exit 2 ;; esac
 VERSION="$(tr -d '[:space:]' < "$ROOT/VERSION")"
 DIST="$ROOT/dist"
 OUT="$DIST/QueryMole-$VERSION-x86_64.AppImage"
@@ -77,27 +73,25 @@ fi
 if [ "$do_build" = 1 ]; then
   echo "== backend (AlmaLinux 9)"
   run_el9 sh -c 'cmake -S backend -B backend/build-el9 -G Ninja >/dev/null && cmake --build backend/build-el9 | tail -3'
-  if [ "$WIDGETSET" = qt6 ]; then
-    echo "== libQt6Pas (AlmaLinux 9)"
-    # with their timestamps, so that make in the kept build directory only rebuilds what changed (a full build takes
-    # a quarter of an hour)
-    rm -rf "$ROOT/tools/cache/qt6pas-src"
-    mkdir -p "$ROOT/tools/cache"
-    run_fpc cp -rp /usr/lib64/lazarus/lcl/interfaces/qt6/cbindings "$ROOT/tools/cache/qt6pas-src"
-    rm -rf "$ROOT/tools/cache/qt6pas-src/attic" "$ROOT"/tools/cache/qt6pas-src/libQt6Pas.so*
-    run_el9 sh tools/appimage/build-qt6pas.sh
-  fi
+  echo "== libQt6Pas (AlmaLinux 9)"
+  # with their timestamps, so that make in the kept build directory only rebuilds what changed (a full build takes
+  # a quarter of an hour)
+  rm -rf "$ROOT/tools/cache/qt6pas-src"
+  mkdir -p "$ROOT/tools/cache"
+  run_fpc cp -rp /usr/lib64/lazarus/lcl/interfaces/qt6/cbindings "$ROOT/tools/cache/qt6pas-src"
+  rm -rf "$ROOT/tools/cache/qt6pas-src/attic" "$ROOT"/tools/cache/qt6pas-src/libQt6Pas.so*
+  run_el9 sh tools/appimage/build-qt6pas.sh
   echo "== libssh (AlmaLinux 9)"
   run_el9 sh tools/appimage/build-libssh.sh
   echo "== application (freepascal container)"
   # linking is only redone when a source changed: force it, the library directory is not part of the check
   touch "$ROOT/app/qbr.lpr"
-  run_fpc env QBR_BACKEND_BUILD="$ROOT/backend/build-el9" QBR_WIDGETSET="$WIDGETSET" bash ./build.sh --runtime
+  run_fpc env QBR_BACKEND_BUILD="$ROOT/backend/build-el9" QBR_WIDGETSET=qt6 bash ./build.sh --runtime
 fi
 [ -f "$ROOT/app/bin/querymole" ] && [ -d "$ROOT/backend/build-el9" ] || { echo "app/bin/querymole or backend/build-el9 is missing" >&2; exit 1; }
 
 echo "== staging"
-run_el9 env QBR_WIDGETSET="$WIDGETSET" sh tools/appimage/stage.sh
+run_el9 sh tools/appimage/stage.sh
 APPDIR="$DIST/AppDir"
 install -m 755 "$ROOT/tools/appimage/AppRun" "$APPDIR/AppRun"
 install -m 644 "$ROOT/tools/appimage/querymole.desktop" "$APPDIR/querymole.desktop"

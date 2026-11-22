@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Builds and tests every push and pull request (the release workflow, release.yml, only runs for tags).
 #
-# Linux:   tests/ci.sh -> backend, GTK2 compile check, Qt6 program, FPCUnit tests; then the FPCUnit tests and the
+# Linux:   tests/ci.sh -> backend, Qt6 program, FPCUnit tests; then the FPCUnit tests and the
 #          program's self-tests against all six servers of tests/run-matrix.sh (MySQL 5.7, 8.0, 8.4, 9, MariaDB
 #          10.11, 11.4) in throw-away podman containers.
 # Windows: ./build.sh --backend --runtime, a build check only: the runner cannot start the Linux server containers.

@@ -46,7 +46,7 @@ SHIM_UNITS = {"tntregistry", "tntwindows", "registry"}
 PORTABLE = [os.path.join(LAZDIR, p) for p in (
     "lcl/*.pp", "lcl/*.pas", "lcl/include/*.inc", "lcl/nonwin32/*.pp", "components/lazutils/*.pas",
     "components/lazutils/*.pp", "components/lazutils/*.inc", "components/virtualtreeview/*.pas",
-    "components/virtualtreeview/include/intf/*.inc", "components/virtualtreeview/units/gtk2/*.pas", "components/synedit/*.pp", "components/synedit/*.pas",
+    "components/virtualtreeview/include/intf/*.inc", "components/virtualtreeview/units/qt6/*.pas", "components/synedit/*.pp", "components/synedit/*.pas",
 )] + [os.path.join(FPCSRC, p) for p in (
     "rtl/inc/systemh.inc", "rtl/inc/objpash.inc", "rtl/inc/threadh.inc", "rtl/inc/*h.inc",
     "packages/fcl-registry/src/registry.pp", "packages/fcl-registry/src/regdef.inc", "rtl/objpas/types.pp", "rtl/objpas/sysutils/*.inc",
@@ -66,9 +66,9 @@ LOCAL = re.compile(r"\b([A-Za-z_]\w*)(?=\s*(?:,\s*[A-Za-z_]\w*\s*)*:(?!=))")
 NOISE = re.compile(r"'(?:[^'\n]|'')*'|\{[^$][^}]*\}|\(\*.*?\*\)|//[^\n]*", re.S)
 
 
-# Conditional compilation is evaluated as for Linux (GTK2), so code guarded by {$IFDEF MSWINDOWS} is
+# Conditional compilation is evaluated as for Linux (Qt6), so code guarded by {$IFDEF MSWINDOWS} is
 # not counted and the LCL's Windows-only declarations are not taken for portable ones.
-DEFINES = {"UNIX", "LINUX", "FPC", "LCL", "LCLGTK2", "CPU64", "CPUX86_64"}
+DEFINES = {"UNIX", "LINUX", "FPC", "LCL", "LCLQT6", "CPU64", "CPUX86_64"}
 COND = re.compile(r"\{\$(IFDEF|IFNDEF|ELSE|ENDIF)\b\s*(\w*)[^}]*\}", re.I)
 
 

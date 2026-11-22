@@ -1,6 +1,6 @@
 # ADR-0027 — Linux release as an AppImage, bundled GTK2 and backend built on AlmaLinux 9
 
-- Status: Accepted; bundled toolkit to change to Qt6 (ADR-0044)
+- Status: Accepted; bundled toolkit changed to Qt6 with 0.1.0-alpha.6, GTK2 parts removed after 0.1.0-alpha.9 (ADR-0044)
 - Date: 2026-11-04
 - Deciders: Harald Lapp (project owner)
 

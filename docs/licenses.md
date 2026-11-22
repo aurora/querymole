@@ -50,7 +50,7 @@ build (ADR-0003/ADR-0014).
 
 The AppImage takes its libraries from AlmaLinux 9 packages; `THIRD-PARTY-LIBS.txt` in the image lists each file with
 its package, version and the licence the package states, `licenses/rpm/` carries the packages' licence files. Added
-for the Qt6 widgetset (ADR-0044; the GTK2 image bundles GTK2 instead):
+for the Qt6 widgetset (ADR-0044; up to 0.1.0-alpha.5 the image bundled GTK2 instead):
 
 | Library | Licence | Fit with GPL-2.0-or-later |
 |---|---|---|
