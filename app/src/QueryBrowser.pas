@@ -3492,7 +3492,8 @@ begin
       RemoveResultSetMI.Enabled := FActiveRSTabSheet.RSPanels.Count > 1;
       AddRowMI.Enabled := Resultset.EditingAllowed;
       DeleteRowMI.Enabled := Resultset.EditingAllowed;
-      ExportResultsetMI.Enabled := Resultset.RowCount > 0;
+      // Port: not while rows are still loading, the file would hold only the rows fetched so far.
+      ExportResultsetMI.Enabled := (Resultset.RowCount > 0) and not Resultset.QueryExecuting;
       CopyRowValuesMI.Enabled := Resultset.RowCount > 0;
 
       LoadFieldContentMI.Enabled := Resultset.EditingAllowed;

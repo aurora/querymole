@@ -91,8 +91,8 @@ an installer (ADR-0014); macOS is deferred (ADR-0039; `docs/macos-setup.md`).
   `VTCompat`); 2 million rows now load in about a minute with the window answering throughout. That this was the
   cause of that freeze is likely, not proven (its stack samples showed HandleIdle and GLib, not the sort).
 - Dead connections (standby, VPN gone) no longer freeze the window (ADR-0043): TCP timeouts on the socket, keep-alive
-  ping in a thread. Open: the Windows backend build with the socket options; `Ping` before a query still blocks
-  during an outage.
+  ping in a thread. The Windows backend build with the socket options compiles (it is in the CI builds since 1.0.0-beta.1); how
+  it behaves on Windows is a manual test. Open by design: `Ping` before a query still blocks during an outage (ADR-0043).
 - Look for further undefined behaviour in the C backend with sanitizers; more
   tests per `myx_*` area (query analysis, editable result sets, import/export).
 - `myx_pdf.c` (needs the "panda" library) and `myx_live_profiling.c` (POSIX
@@ -154,8 +154,8 @@ an installer (ADR-0014); macOS is deferred (ADR-0039; `docs/macos-setup.md`).
 - Result export: JSON and JSON Lines added (ADR-0049), the five original exporters reviewed and fixed
   (`docs/export-review.md`, 2026-11-20); CSV settings on the Browser options page (separator, quotes, line breaks,
   header, BOM) and a TSV format in `LOAD DATA`'s format (ADR-0050). Candidates, each with its own ADR: SQL INSERT
-  statements, Markdown table, real XLSX. Open: export while rows still load writes only those rows;
-  the grid's fetch of large results is much slower than the backend's.
+  statements, Markdown table, real XLSX. The export entries are disabled while rows still load.
+  Open: the grid's fetch of large results is much slower than the backend's.
 - HiDPI scaling, then optional vector-rendered icon set (ADR-0009).
 - Servers that speak the MySQL protocol (ADR-0054, proposed): a server profile (kind and version, detected at
   connect) and capabilities that generated SQL and the menus follow. Manticore first (tested 2026-11-22: connecting,

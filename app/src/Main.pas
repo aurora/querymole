@@ -851,7 +851,9 @@ begin
               if Assigned(ActiveResultset) then
               begin
                 for I := 0 to self.ExportResultsetMI.Count - 1 do
-                  self.ExportResultsetMI.Items[i].Enabled := (ActiveResultset.RowCount > 0);
+                  // Port: not while rows are still loading, the file would hold only the rows fetched so far.
+                  self.ExportResultsetMI.Items[i].Enabled := (ActiveResultset.RowCount > 0) and
+                    not ActiveResultset.QueryExecuting;
               end
               else
                 for I := 0 to self.ExportResultsetMI.Count - 1 do
