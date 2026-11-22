@@ -62,6 +62,7 @@ Related.
 | [0051](0051-connection-manager-test-button-and-groups.md) | Connection manager: a test button and groups of connections | Proposed |
 | [0052](0052-connect-animation-start-without-connection-automatic-update-check.md) | Connect animation, starting without a connection, automatic update check | Proposed |
 | [0053](0053-groups-in-the-connect-dialog-and-stored-ssh-password.md) | Groups in the connect dialog's list, and the stored SSH password | Proposed |
+| [0054](0054-server-profiles-and-capabilities-manticore-first.md) | Server profiles and capabilities for MySQL-protocol servers, Manticore first | Proposed |
 
 ## Numbering
 
