@@ -137,15 +137,15 @@ default, in the original's style.
 - **Start and updates** (ADR-0052, proposed): the banner animation while connecting; Cancel at start opens the program
   without a connection; an opt-in update check at start (asked once) with "development versions" in the update dialogs.
 - **Connection manager** (ADR-0051, proposed): a "Test" button and groups of stored connections (folders in the tree,
-  kept in `storage_path`). Open: groups in the connect dialog's list.
+  kept in `storage_path`); the groups also in the connect dialog's list (ADR-0053).
 - **SSH tunnel** for connections (ADR-0048, proposed): libssh in the program, OpenSSH and PuTTY keys, agent and
   Pageant, `known_hosts` and `~/.ssh/config`; mock-up in the ADR; Pageant pipe name known; libssh 0.12.2 builds for the AppImage (`tools/appimage/build-libssh.sh`). The tunnel itself works and is
   tested on the matrix against an OpenSSH container (`app/src/SSHTunnel.pas`, `tests/test_ssh_tunnel.pas`). The program
   connects through it when a stored connection has `SSH_TUNNEL=Yes` and the `SSH_*` advanced options (matrix self-test
   proves the SSH login). The UI follows the mock-up
   (`app/src/SSHTunnelDialog.pas`; screenshots with `--shot-connect`, `--shot-ssh`, `--shot-options`). `.ppk` keys
-  (formats 2 and 3) work and are tested; Pageant is implemented for Windows. Next: storing the SSH password, a test on
-  Windows (Pageant, libssh.dll).
+  (formats 2 and 3) work and are tested; Pageant is implemented for Windows. The SSH password can be stored (ADR-0053). Next: a
+  test on Windows (Pageant, libssh.dll).
 - TLS mode in the connection dialog: required / preferred / off (ADR-0005).
 - Result export: JSON and JSON Lines added (ADR-0049), the five original exporters reviewed and fixed
   (`docs/export-review.md`, 2026-11-20); CSV settings on the Browser options page (separator, quotes, line breaks,

@@ -116,11 +116,21 @@ object SSHTunnelForm: TSSHTunnelForm
     object SSHPasswordRBtn: TRadioButton
       Left = 100
       Top = 132
-      Width = 222
+      Width = 70
       Height = 17
-      Caption = 'Password'
+      Caption = 'Password:'
       TabOrder = 7
       OnClick = FieldChange
+    end
+    object SSHPasswordEd: TEdit
+      Left = 172
+      Top = 130
+      Width = 150
+      Height = 21
+      Enabled = False
+      EchoMode = emPassword
+      PasswordChar = '*'
+      TabOrder = 8
     end
     object SSHNoteLbl: TLabel
       Left = 14

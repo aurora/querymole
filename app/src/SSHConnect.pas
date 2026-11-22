@@ -16,6 +16,8 @@
     SSH_USER=...          default: from the config, else the local user
     SSH_AUTH=agent|key|password   default: agent (the agent and the default keys, as `ssh` does)
     SSH_KEYFILE=...       for SSH_AUTH=key
+    SSH_PASSWORD=...      for SSH_AUTH=password; plain text in memory, in the file stored as the connection's password
+                          is (myx_xml_user_connections.c) or left out; asked for when empty
     SSH_CONFIG=...        another ssh config file instead of ~/.ssh/config
     SSH_KNOWN_HOSTS=...   another known_hosts file instead of ~/.ssh/known_hosts }
 unit SSHConnect;
@@ -216,7 +218,10 @@ begin
       TargetPort := UserConn^.port;
       if TargetPort = 0 then
         TargetPort := 3306;
+      // typed in this session (after the stored one failed) before the stored one
       Password := Entry.Password;
+      if Password = '' then
+        Password := Option(UserConn, 'SSH_PASSWORD');
       Passphrase := Entry.Passphrase;
     end;
     Asker := TAsker.Create;

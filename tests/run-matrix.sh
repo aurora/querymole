@@ -227,6 +227,25 @@ for entry in "${matrix[@]}"; do
     <storage_type>1</storage_type>
     <password>not-the-password</password>
   </user_connection>
+  <user_connection>
+    <connection_name>ssh-stored-password</connection_name>
+    <username>root</username>
+    <hostname>127.0.0.1</hostname>
+    <port>$port</port>
+    <advanced_options>
+      <advanced_option>SSH_TUNNEL=Yes</advanced_option>
+      <advanced_option>SSH_HOST=127.0.0.1</advanced_option>
+      <advanced_option>SSH_PORT=24022</advanced_option>
+      <advanced_option>SSH_USER=qbr</advanced_option>
+      <advanced_option>SSH_AUTH=password</advanced_option>
+      <advanced_option>SSH_PASSWORD=qbr-test</advanced_option>
+      <advanced_option>SSH_CONFIG=$ssh_dir/config_app</advanced_option>
+      <advanced_option>SSH_KNOWN_HOSTS=$ssh_dir/known_hosts_app</advanced_option>
+    </advanced_options>
+    <connection_type>0</connection_type>
+    <storage_type>1</storage_type>
+    <password>$password</password>
+  </user_connection>
 </user_connections>
 XML
       # a new login on the SSH server proves the program went through the tunnel (the database port is reachable
@@ -254,6 +273,16 @@ XML
       if ! grep -q '^failed: .*1045' "$ssh_data/test-wrong.txt" 2>/dev/null; then
         app_result="FAIL"
         details="$details test with wrong password: $(head -1 "$ssh_data/test-wrong.txt" 2>/dev/null || echo no report);"
+      fi
+      # the stored SSH password (ADR-0053): a password login without a question (a question would block until the
+      # timeout)
+      logins=$(grep -c 'Accepted password for qbr' <<< "$("$engine" logs qbr-sshd 2>&1)")
+      run timeout 60 "${xvfb[@]}" "$APP" -datadir "$ssh_data" --selftest-test-connection ssh-stored-password \
+        "$ssh_data/test-sshpw.txt" >/dev/null 2>&1
+      if ! grep -q '^ok: .*SSH server' "$ssh_data/test-sshpw.txt" 2>/dev/null ||
+        [ "$(grep -c 'Accepted password for qbr' <<< "$("$engine" logs qbr-sshd 2>&1)")" -le "$logins" ]; then
+        app_result="FAIL"
+        details="$details stored SSH password: $(head -1 "$ssh_data/test-sshpw.txt" 2>/dev/null || echo no report);"
       fi
     fi
     [ "$app_result" = PASS ] || failed=1

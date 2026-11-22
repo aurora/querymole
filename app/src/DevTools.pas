@@ -4,7 +4,8 @@ unit DevTools;
 { Developer modes of the executable (not part of the original program):
 
     querymole --shot-connect out.png     show the connect dialog, save a screenshot of it (and out_details.png with
-                                         "Details >>" open, out_connecting.png with the banner animation), exit
+                                         "Details >>" open, out_connecting.png with the banner animation, out_list.png with
+                                         the stored connections listed), exit
     querymole --selftest-test-connection <name> out.txt
                                          the connection manager's "Test" (ADR-0051) for the stored connection
                                          <name>: "ok: ..." or "failed: ..." in out.txt
@@ -187,6 +188,16 @@ begin
     Dlg.Position := poDesigned;
     Dlg.Show;
     CaptureWindowToPng(Dlg, FileName);
+    // the list of stored connections, opened (groups, ADR-0053)
+    Dlg.ConnectionCBox.DroppedDown := True;
+    for I := 1 to 10 do
+    begin
+      Application.ProcessMessages;
+      Sleep(30);
+    end;
+    CaptureWindowToPng(Dlg, ChangeFileExt(FileName, '') + '_list.png');
+    Dlg.ConnectionCBox.DroppedDown := False;
+    Application.ProcessMessages;
     Dlg.DetailsBtn.Click;
     CaptureWindowToPng(Dlg, ChangeFileExt(FileName, '') + '_details.png');
     // the banner animation as while connecting (ADR-0052), a few frames in
@@ -350,7 +361,8 @@ begin
     Trace('dialog: OK enabled = ' + BoolToStr(Dlg.OKBtn.Enabled, True));
     Dlg.OKBtnClick(nil);                      // starts the connect thread like a click would
     Started := GetTickCount64;
-    while (Dlg.ModalResult = 0) and (Dlg.PMySQL = nil) and (GetTickCount64 - Started < 15000) do
+    // until the dialog has the thread's result (and has stored the connection, as after a click on OK)
+    while Dlg.BannerBusy.Visible and (GetTickCount64 - Started < 15000) do
     begin
       Application.ProcessMessages;
       CheckSynchronize(10);                   // the thread reports through Synchronize

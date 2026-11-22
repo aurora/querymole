@@ -39,6 +39,8 @@ static xmlXPathContextPtr context; /* used by all XPath operations*/
 
 // forward declarations
 static xmlChar *obscure(const xmlChar* str);
+
+#define SSH_PASSWORD_OPTION "SSH_PASSWORD="
 static xmlChar *retrieve_password(MYX_USER_CONNECTION *conn, xmlChar *password,
                                   enum myx_password_storage_type storage_type);
 static xmlChar* save_password(MYX_USER_CONNECTION *conn, xmlChar *password,
@@ -1051,6 +1053,17 @@ static
     {
       out->advanced_options[i]= (char*)
         xmlNodeListGetString(doc, node_set->nodeTab[i]->children, 1);
+      // revival: the SSH tunnel's password is stored like the connection's (ADR-0048)
+      if (out->advanced_options[i] &&
+          !strncmp(out->advanced_options[i], SSH_PASSWORD_OPTION, strlen(SSH_PASSWORD_OPTION)))
+      {
+        xmlChar *plain= retrieve_password(out,
+          (xmlChar*)out->advanced_options[i] + strlen(SSH_PASSWORD_OPTION), pwd_storage_type);
+        xmlFree(out->advanced_options[i]);
+        out->advanced_options[i]= (char*)xmlStrncatNew((xmlChar*)SSH_PASSWORD_OPTION, plain ? plain : (xmlChar*)"", -1);
+        if (plain)
+          xmlFree(plain);
+      }
     }
   }
 }
@@ -1126,7 +1139,22 @@ static void store_user_connection_attributes(xmlNodePtr ucon_node, MYX_USER_CONN
 
   node= xmlNewTextChild(ucon_node, NULL, (xmlChar*)"advanced_options", NULL);
   for (j=0; j < (int)ucon->advanced_options_num; j++)
-    xmlNewTextChild(node, NULL, (xmlChar*)"advanced_option",(xmlChar*)ucon->advanced_options[j]);
+    if (ucon->advanced_options[j] &&
+        !strncmp(ucon->advanced_options[j], SSH_PASSWORD_OPTION, strlen(SSH_PASSWORD_OPTION)))
+    {
+      // revival: the SSH tunnel's password is stored like the connection's, or not at all (ADR-0048)
+      xmlChar *stored= save_password(ucon, (xmlChar*)ucon->advanced_options[j] + strlen(SSH_PASSWORD_OPTION),
+                                     pwd_storage_type);
+      if (stored)
+      {
+        xmlChar *entry= xmlStrncatNew((xmlChar*)SSH_PASSWORD_OPTION, stored, -1);
+        xmlNewTextChild(node, NULL, (xmlChar*)"advanced_option", entry);
+        xmlFree(entry);
+        g_free(stored);
+      }
+    }
+    else
+      xmlNewTextChild(node, NULL, (xmlChar*)"advanced_option",(xmlChar*)ucon->advanced_options[j]);
 
   xmlNewTextChild(ucon_node,NULL,(xmlChar*)"storage_path",(xmlChar*)STRNULL(ucon->storage_path));
   xmlNewTextChild(ucon_node,NULL,(xmlChar*)"notes", (xmlChar*)STRNULL(ucon->notes));

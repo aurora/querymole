@@ -99,6 +99,9 @@ type
     procedure GetStoredConnections;
     procedure GetValuesFromConnection(a_connection: TMYX_USER_CONNECTION);
     function SetConnectionValues(a_connection: TMYX_USER_CONNECTION): TMYX_USER_CONNECTION;
+    // revival: the stored connections with their groups (ADR-0053)
+    function ConnectionDisplayName(a_connection: TMYX_USER_CONNECTION): WideString;
+    function ConnectionNameInBox: WideString;
 
     //GUI interaction
     //CBoxes
@@ -325,6 +328,61 @@ end;
 
 //----------------------------------------------------------------------------------------------------------------------
 
+// revival: orders connections as the Connections tree of the options shows them (ADR-0051, ADR-0053): depth first,
+// each group where its first connection is in the file, connections in file order within their group
+procedure OrderByGroups(Conns: TList);
+
+var
+  Ordered: TList;
+
+  procedure Emit(const Prefix: String);
+  var
+    I: Integer;
+    Path, Child: String;
+    Done: TStringList;
+  begin
+    Done := TStringList.Create;
+    try
+      for I := 0 to Conns.Count - 1 do
+      begin
+        Path := TMYX_USER_CONNECTION(Conns[I]).storage_path;
+        if Path = Prefix then
+          Ordered.Add(Conns[I])
+        else if (Prefix = '') or (Copy(Path, 1, Length(Prefix) + 1) = Prefix + '/') then
+        begin
+          // the next group below Prefix on the way to Path
+          if Prefix = '' then
+            Child := Path
+          else
+            Child := Copy(Path, Length(Prefix) + 2, MaxInt);
+          if Pos('/', Child) > 0 then
+            Child := Copy(Child, 1, Pos('/', Child) - 1);
+          if Prefix <> '' then
+            Child := Prefix + '/' + Child;
+          if Done.IndexOf(Child) < 0 then
+          begin
+            Done.Add(Child);
+            Emit(Child);
+          end;
+        end;
+      end;
+    finally
+      Done.Free;
+    end;
+  end;
+
+begin
+  Ordered := TList.Create;
+  try
+    Emit('');
+    Conns.Assign(Ordered);
+  finally
+    Ordered.Free;
+  end;
+end;
+
+//----------------------------------------------------------------------------------------------------------------------
+
 procedure TConnectToInstanceForm.GetStoredConnections;
 
 var
@@ -360,10 +418,7 @@ begin
     begin
       //fill connection lookup
       if(stored_conns.user_connections[I].storage_type=MYX_FAVORITE_USER_CONNECTION)then
-      begin
         favorite_conns.Add(stored_conns.user_connections[I]);
-        ConnectionCBox.Items.Add(stored_conns.user_connections[I].connection_name);
-      end;
 
       if(UsernameCBox.Items.IndexOf(stored_conns.user_connections[I].username)=-1)then
         UsernameCBox.Items.Add(stored_conns.user_connections[I].username);
@@ -371,6 +426,11 @@ begin
       if(HostnameCBox.Items.IndexOf(stored_conns.user_connections[I].hostname)=-1)then
         HostnameCBox.Items.Add(stored_conns.user_connections[I].hostname);
     end;
+
+  // revival: in the order of the Connections tree of the options (groups where their first connection is, ADR-0053)
+  OrderByGroups(favorite_conns);
+  for I := 0 to favorite_conns.Count-1 do
+    ConnectionCBox.Items.Add(ConnectionDisplayName(TMYX_USER_CONNECTION(favorite_conns[I])));
 
   //fill edits with last connection
   if(stored_conns.last_connection>-1)and(stored_conns.last_connection<stored_conns.user_connections.Count)then
@@ -421,9 +481,9 @@ begin
 
   //Display connection name
   if(Comparetext(ConnectionCBox.Text,
-    a_connection.connection_name)<>0)and
+    ConnectionDisplayName(a_connection))<>0)and
     (a_connection.storage_type=MYX_FAVORITE_USER_CONNECTION)then
-    ConnectionCBox.Text := a_connection.connection_name;
+    ConnectionCBox.Text := ConnectionDisplayName(a_connection);
 
   if(PasswordEd.Text='')then
   begin
@@ -440,6 +500,36 @@ end;
 
 //----------------------------------------------------------------------------------------------------------------------
 
+// revival: "Customers / ACME / ACME Production" for a connection in the group Customers/ACME (ADR-0053)
+function TConnectToInstanceForm.ConnectionDisplayName(a_connection: TMYX_USER_CONNECTION): WideString;
+
+begin
+  if a_connection.storage_path = '' then
+    Result := a_connection.connection_name
+  else
+    Result := StringReplace(a_connection.storage_path, '/', ' / ', [rfReplaceAll]) + ' / ' +
+      a_connection.connection_name;
+end;
+
+//----------------------------------------------------------------------------------------------------------------------
+
+// revival: the connection name of the text in the box: without the group when it is a stored connection's entry
+function TConnectToInstanceForm.ConnectionNameInBox: WideString;
+
+var
+  I: Integer;
+
+begin
+  Result := ConnectionCBox.Text;
+  I := ConnectionCBox.ItemIndex;
+  if (I < 0) or (ConnectionCBox.Items[I] <> ConnectionCBox.Text) then
+    I := ConnectionCBox.Items.IndexOf(ConnectionCBox.Text);
+  if (I >= 0) and (I < favorite_conns.Count) then
+    Result := TMYX_USER_CONNECTION(favorite_conns[I]).connection_name;
+end;
+
+//----------------------------------------------------------------------------------------------------------------------
+
 function TConnectToInstanceForm.SetConnectionValues(a_connection: TMYX_USER_CONNECTION): TMYX_USER_CONNECTION;
 
 var
@@ -447,7 +537,7 @@ var
   
 begin
   if(a_connection=nil)then
-    a_connection := TMYX_USER_CONNECTION.Create(ConnectionCBox.Text,
+    a_connection := TMYX_USER_CONNECTION.Create(ConnectionNameInBox,
       UsernameCBox.Text, PasswordEd.Text, HostnameCBox.Text,
       StrToInt(PortEd.Text), SchemataEd.Text,
       '', '',
@@ -456,7 +546,7 @@ begin
   begin
     with a_connection do
     begin
-      connection_name := ConnectionCBox.Text;
+      connection_name := ConnectionNameInBox;
       username := UsernameCBox.Text;
       password := PasswordEd.Text;
       hostname := HostnameCBox.Text;

@@ -28,6 +28,7 @@ type
     SSHKeyEd: TEdit;
     SSHKeyBtn: TBitBtn;
     SSHPasswordRBtn: TRadioButton;
+    SSHPasswordEd: TEdit;
     SSHNoteLbl: TLabel;
     OKBtn: TButton;
     CancelBtn: TButton;
@@ -138,6 +139,7 @@ procedure TSSHTunnelForm.FieldChange(Sender: TObject);
 begin
   SSHKeyEd.Enabled := SSHKeyRBtn.Checked;
   SSHKeyBtn.Enabled := SSHKeyRBtn.Checked;
+  SSHPasswordEd.Enabled := SSHPasswordRBtn.Checked;
   OKBtn.Enabled := (Trim(SSHHostEd.Text) <> '') and (not SSHKeyRBtn.Checked or (Trim(SSHKeyEd.Text) <> ''));
 end;
 
@@ -169,6 +171,7 @@ begin
   SSHPortEd.Text := Options.Values['SSH_PORT'];
   SSHUserEd.Text := Options.Values['SSH_USER'];
   SSHKeyEd.Text := Options.Values['SSH_KEYFILE'];
+  SSHPasswordEd.Text := Options.Values['SSH_PASSWORD'];
   Auth := LowerCase(Options.Values['SSH_AUTH']);
   if Auth = 'key' then
     SSHKeyRBtn.Checked := True
@@ -194,6 +197,11 @@ begin
     SetValue(Options, 'SSH_KEYFILE', Trim(SSHKeyEd.Text))
   else
     SetValue(Options, 'SSH_KEYFILE', '');
+  // stored as the connection's password is, following Options > General (ADR-0048); empty: asked for when connecting
+  if SSHPasswordRBtn.Checked then
+    SetValue(Options, 'SSH_PASSWORD', SSHPasswordEd.Text)
+  else
+    SetValue(Options, 'SSH_PASSWORD', '');
 end;
 
 { TSSHTunnelRow }
