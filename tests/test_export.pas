@@ -55,6 +55,7 @@ type
     procedure TestTsv;
     procedure TestTsvOptions;
     procedure TestTsvLoadDataRoundTrip;
+    procedure TestEmptyBlobIsNotNull;
   end;
 
 implementation
@@ -613,6 +614,53 @@ begin
   end;
   AssertEquals(ExportSQL('CSV', 'SELECT ' + Cols + ' FROM qbr_export.t ORDER BY id'),
     ExportSQL('CSV', 'SELECT ' + Cols + ' FROM qbr_export.t2 ORDER BY id'));
+end;
+
+// An empty BLOB value is '', not NULL (it was NULL: only strings and text kept the empty value).
+procedure TExportTest.TestEmptyBlobIsNotNull;
+const
+  Sel = 'SELECT id, bl, vb, tx FROM qbr_export.e ORDER BY id';
+var
+  Rs: PMYX_RESULTSET;
+  Row: PMYX_RS_ROW;
+  C: Integer;
+  S: AnsiString;
+  J: TJSONData;
+  O: TJSONObject;
+begin
+  ExecSQL(FMy, 'CREATE TABLE qbr_export.e (id INT PRIMARY KEY, bl BLOB, vb VARBINARY(10), tx TEXT)');
+  ExecSQL(FMy, 'INSERT INTO qbr_export.e VALUES (1, '''', '''', ''''), (2, NULL, NULL, NULL), ' +
+    '(3, X''41'', X''41'', ''A'')');
+  Rs := Query(Sel);
+  try
+    AssertEquals('rows', 3, Rs^.rows_num);
+    for C := 1 to 3 do
+    begin
+      Row := Rs^.rows;
+      AssertNotNull('empty value of column ' + IntToStr(C) + ' is not NULL', Pointer((Row^.fields + C)^.value));
+      AssertEquals('empty length', 0, (Row^.fields + C)^.value_length);
+      Row := Rs^.rows + 1;
+      AssertNull('NULL value of column ' + IntToStr(C) + ' stays NULL', Pointer((Row^.fields + C)^.value));
+    end;
+    // column 1 is a real BLOB column, the case that was wrong
+    AssertTrue('BLOB column', (Rs^.columns + 1)^.column_type = MYX_RSCT_BLOB);
+  finally
+    myx_query_free_resultset(Rs);
+  end;
+  S := ExportSQL('JSON', Sel);
+  J := GetJSON(S);
+  try
+    O := TJSONArray(J).Objects[0];
+    AssertTrue('JSON: empty BLOB is a string', O.Elements['bl'].JSONType = jtString);
+    AssertEquals('', O.Strings['bl']);
+    O := TJSONArray(J).Objects[1];
+    AssertTrue('JSON: NULL BLOB is null', O.Elements['bl'].JSONType = jtNull);
+  finally
+    J.Free;
+  end;
+  S := ExportSQL('CSV', Sel);
+  AssertTrue('CSV: empty BLOB is "", NULL is empty: ' + S, Pos('1,"","",""', S) > 0);
+  AssertTrue('CSV: NULLs: ' + S, Pos('2,,,', S) > 0);
 end;
 
 initialization

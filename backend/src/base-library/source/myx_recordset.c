@@ -413,9 +413,9 @@ MYX_RESULTSET * myx_query_execute(MYSQL *mysql, const char *sql, int enforce_edi
           }
           else
           {
-            if ((current_column->column_type == MYX_RSCT_STRING
-                 || current_column->column_type == MYX_RSCT_TEXT)
-                && current_field->value_length == 0 && row[k]!=NULL)
+            /* revival: an empty value that is not NULL is "" for every type; it was only so for strings and text, an
+               empty BLOB or BINARY value became NULL (ADR-0001: a fault of the original, see docs/export-review.md) */
+            if (current_field->value_length == 0 && row[k]!=NULL)
               current_field->value= g_strdup("");
             else
               continue; // NULL blob, don't check whether malloc failed

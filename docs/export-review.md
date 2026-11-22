@@ -74,8 +74,9 @@ numbers and dates as the server formats them, very wide rows (300 columns × 100
   ends (`TExecuteQueryThread`, `GridUpdateMs`); the same query now loads in under 2 s with all 2M rows in the grid.
 - **4-byte UTF-8 (emoji)** could not reach any export because the connection used `utf8` (utf8mb3). Fixed on
   2026-11-22: the connection uses `utf8mb4` (ADR-0056).
-- **Empty BLOB values arrive as NULL** in the result set (`myx_recordset.c` keeps `""` only for string/text columns),
-  so every format exports an empty BLOB as NULL. VARBINARY is not affected.
+- **Empty BLOB values arrived as NULL** in the result set (`myx_recordset.c` kept `""` only for string/text columns),
+  so every format exported an empty BLOB as NULL; VARBINARY was not affected. Fixed on 2026-11-22: an empty value that
+  is not NULL is `""` for every type (`TestEmptyBlobIsNotNull`). The grid now shows the BLOB symbol on such a cell.
 - **Binary values end at their first zero byte** in every format: the exporter interface passes C strings without
   lengths.
 - The CSV separator option exists but the program has no UI for it (see ADR-0049, further formats).
