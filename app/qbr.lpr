@@ -242,6 +242,14 @@ begin
       Res := 0
     else
       Res := MainForm.MySQLConn.ConnectToServer(True, True, True);
+    // started by File > New Instance Connection: Cancel ends this program, there is a window already
+    for I := 1 to ParamCount do
+      if (ParamStr(I) = '--new-instance') and (Res <> 1) then
+      begin
+        Trace('new instance cancelled');
+        Application.Terminate;
+        Halt(0);
+      end;
   end;
   Trace('connect result ' + IntToStr(Res));
 
