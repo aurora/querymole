@@ -168,6 +168,12 @@ an installer (ADR-0014); macOS is deferred (ADR-0039; `docs/macos-setup.md`).
   header, BOM) and a TSV format in `LOAD DATA`'s format (ADR-0050). Candidates, each with its own ADR: SQL INSERT
   statements, Markdown table, real XLSX. The export entries are disabled while rows still load.
   The grid's fetch of large results is as fast as the backend's since 2026-11-22 (updates every 150 ms at most).
+- Result grid, filter per column: a short condition typed for a column (e.g. `abc` contains, `^abc` starts with,
+  `>10`, `!x` not equal, empty / NULL) hides non-matching rows of the loaded result, without a new query. Off by
+  default; needs an ADR with a mock-up of where the filter is entered in the original's style.
+- Result grid, summary row: for selected (or all) numeric columns, sum, count, average, minimum and maximum of the
+  loaded rows, shown in a row or bar under the grid. Off by default; needs an ADR (layout, behaviour while rows
+  still load and with NULLs).
 - HiDPI scaling, then optional vector-rendered icon set (ADR-0009).
 - Servers that speak the MySQL protocol (ADR-0054, proposed): a server profile (kind and version, detected at
   connect) and capabilities that generated SQL and the menus follow. Manticore first (tested 2026-11-22: connecting,
