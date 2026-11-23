@@ -240,6 +240,8 @@ begin
   FInitControls := True;
   try
     InitForm(Self);
+    // The original's form puts the type list 2 pixels lower than the port field; widgetsets draw it visibly off the line
+    TypeCBox.Top := PortEd.Top;
 
     if (not (MYXCommonOptions.RestoreWindowPos(Self, False))) then
       Position := poMainFormCenter;

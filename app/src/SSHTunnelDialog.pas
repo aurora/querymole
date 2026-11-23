@@ -121,14 +121,34 @@ end;
 // the note can take more lines than the form file allows for; the frame and the buttons follow it
 procedure TSSHTunnelForm.FormShow(Sender: TObject);
 var
-  R: TRect;
+  Words, Word, Line: string;
+  P, Lines: Integer;
 begin
-  // the height the wrapped note needs in its width, with the program's font and the translation
-  SSHNoteLbl.Canvas.Font := SSHNoteLbl.Font;
-  R := Rect(0, 0, SSHNoteLbl.Width, 0);
-  DrawText(SSHNoteLbl.Canvas.Handle, PChar(SSHNoteLbl.Caption), Length(SSHNoteLbl.Caption), R,
-    DT_CALCRECT or DT_WORDBREAK);
-  SSHNoteLbl.Height := R.Bottom + 2;
+  // the height the wrapped note needs in its width, counted word by word with the program's font and the
+  // translation (the platform's own measurements cut the last line on Windows or gave one line)
+  SSHNoteLbl.AutoSize := False;
+  SSHNoteLbl.Canvas.Font.Assign(SSHNoteLbl.Font);
+  Words := UTF8String(SSHNoteLbl.Caption);
+  Lines := 1;
+  Line := '';
+  while Words <> '' do
+  begin
+    P := Pos(' ', Words);
+    if P = 0 then
+      P := Length(Words) + 1;
+    Word := Copy(Words, 1, P - 1);
+    Delete(Words, 1, P);
+    if (Line <> '') and (SSHNoteLbl.Canvas.TextWidth(Line + ' ' + Word) > SSHNoteLbl.Width) then
+    begin
+      Inc(Lines);
+      Line := Word;
+    end
+    else if Line = '' then
+      Line := Word
+    else
+      Line := Line + ' ' + Word;
+  end;
+  SSHNoteLbl.Height := Lines * SSHNoteLbl.Canvas.TextHeight('Ag') + 8;
   SSHGBox.Height := SSHNoteLbl.Top + SSHNoteLbl.Height + 16;
   OKBtn.Top := SSHGBox.Top + SSHGBox.Height + 10;
   CancelBtn.Top := OKBtn.Top;

@@ -3,8 +3,8 @@ object SSHTunnelForm: TSSHTunnelForm
   Top = 200
   BorderStyle = bsDialog
   Caption = 'SSH Tunnel'
-  ClientHeight = 286
-  ClientWidth = 360
+  ClientHeight = 312
+  ClientWidth = 400
   Color = clBtnFace
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
@@ -14,36 +14,36 @@ object SSHTunnelForm: TSSHTunnelForm
   object SSHGBox: TGroupBox
     Left = 12
     Top = 10
-    Width = 336
-    Height = 232
+    Width = 376
+    Height = 256
     Caption = 'Connect through an SSH Server'
     TabOrder = 0
     object SSHHostLbl: TLabel
       Left = 8
       Top = 29
-      Width = 86
+      Width = 110
       Height = 13
       Alignment = taRightJustify
       AutoSize = False
       Caption = 'SSH Host:'
     end
     object SSHHostEd: TEdit
-      Left = 100
+      Left = 124
       Top = 25
-      Width = 146
+      Width = 160
       Height = 21
       TabOrder = 0
       OnChange = FieldChange
     end
     object SSHPortLbl: TLabel
-      Left = 254
+      Left = 292
       Top = 29
-      Width = 24
+      Width = 30
       Height = 13
       Caption = 'Port:'
     end
     object SSHPortEd: TEdit
-      Left = 284
+      Left = 326
       Top = 25
       Width = 38
       Height = 21
@@ -52,32 +52,32 @@ object SSHTunnelForm: TSSHTunnelForm
     object SSHUserLbl: TLabel
       Left = 8
       Top = 57
-      Width = 86
+      Width = 110
       Height = 13
       Alignment = taRightJustify
       AutoSize = False
       Caption = 'Username:'
     end
     object SSHUserEd: TEdit
-      Left = 100
+      Left = 124
       Top = 53
-      Width = 146
+      Width = 160
       Height = 21
       TabOrder = 2
     end
     object SSHAuthLbl: TLabel
       Left = 8
       Top = 85
-      Width = 86
+      Width = 110
       Height = 13
       Alignment = taRightJustify
       AutoSize = False
       Caption = 'Login with:'
     end
     object SSHAgentRBtn: TRadioButton
-      Left = 100
+      Left = 124
       Top = 84
-      Width = 222
+      Width = 240
       Height = 17
       Caption = 'SSH agent (ssh-agent, Pageant)'
       Checked = True
@@ -86,25 +86,25 @@ object SSHTunnelForm: TSSHTunnelForm
       OnClick = FieldChange
     end
     object SSHKeyRBtn: TRadioButton
-      Left = 100
+      Left = 124
       Top = 108
-      Width = 70
+      Width = 90
       Height = 17
       Caption = 'Key file:'
       TabOrder = 4
       OnClick = FieldChange
     end
     object SSHKeyEd: TEdit
-      Left = 172
+      Left = 216
       Top = 106
-      Width = 124
+      Width = 112
       Height = 21
       Enabled = False
       TabOrder = 5
       OnChange = FieldChange
     end
     object SSHKeyBtn: TBitBtn
-      Left = 300
+      Left = 332
       Top = 105
       Width = 21
       Height = 23
@@ -114,18 +114,18 @@ object SSHTunnelForm: TSSHTunnelForm
       OnClick = SSHKeyBtnClick
     end
     object SSHPasswordRBtn: TRadioButton
-      Left = 100
+      Left = 124
       Top = 132
-      Width = 70
+      Width = 90
       Height = 17
       Caption = 'Password:'
       TabOrder = 7
       OnClick = FieldChange
     end
     object SSHPasswordEd: TEdit
-      Left = 172
+      Left = 216
       Top = 130
-      Width = 150
+      Width = 148
       Height = 21
       Enabled = False
       EchoMode = emPassword
@@ -135,8 +135,8 @@ object SSHTunnelForm: TSSHTunnelForm
     object SSHNoteLbl: TLabel
       Left = 14
       Top = 160
-      Width = 308
-      Height = 56
+      Width = 348
+      Height = 76
       AutoSize = False
       Caption = 'Server Host and Port are reached from the SSH server. Host aliases, keys and jump hosts from ~/.ssh/config apply; host keys are checked against ~/.ssh/known_hosts.'
       Font.Color = clGrayText
@@ -145,8 +145,8 @@ object SSHTunnelForm: TSSHTunnelForm
     end
   end
   object OKBtn: TButton
-    Left = 192
-    Top = 252
+    Left = 232
+    Top = 276
     Width = 75
     Height = 25
     Caption = 'OK'
@@ -155,8 +155,8 @@ object SSHTunnelForm: TSSHTunnelForm
     TabOrder = 1
   end
   object CancelBtn: TButton
-    Left = 273
-    Top = 252
+    Left = 313
+    Top = 276
     Width = 75
     Height = 25
     Cancel = True
