@@ -6,7 +6,8 @@
 
 Status: **first build done** (2026-11-17, macOS 26.4 on Apple Silicon, Apple clang 21, Homebrew glib
 2.90 / libxml2 2.15 / pcre 8.45 / Connector/C 3.4.11, FPC 3.2.4rc1, Lazarus 4.8): the backend and
-`app/bin/querymole` build, the program starts and `--shot-connect` writes the connect dialog. Steps 4.3
+`app/bin/querymole` build, the program starts and `--shot-connect` writes the connect dialog (again on
+2026-11-23, after the SSH tunnel's libraries were added, see section 6). Steps 4.3
 and later have not been tried. Findings are under "State" at the end. This is the list of steps for a
 Mac with an M processor, and of the places where `build.sh` and the backend needed changes.
 Write down what you find in `docs/linux-port.md` style (state and open problems), and write an ADR
@@ -19,7 +20,7 @@ checks). By hand:
 
 ```bash
 xcode-select --install                       # compiler, make, git, SDK
-brew install cmake ninja pkgconf python@3 glib libxml2 pcre mariadb-connector-c mingw-w64
+brew install cmake ninja pkgconf python@3 glib libxml2 pcre mariadb-connector-c libssh mingw-w64
 ```
 
 - `mingw-w64` brings `x86_64-w64-mingw32-windres` for `tools/build_resources.py` (the `.res` files are
@@ -126,7 +127,15 @@ What had to change:
 - **Screenshots** (`DevTools.CaptureWindowToPng`): copying the screen area shows whatever window is in
   front (a program started from a terminal does not come to the front); on macOS the form's `PaintTo`
   is used instead.
-
+- **SSH tunnel** (ADR-0048, checked 2026-11-23): the build broke at the link step because `LibSSH.pas` had the
+  same `external` problem; it now adds `{$LINKLIB ssh}` under `{$IFDEF DARWIN}` (Homebrew's libssh 0.12.2, in
+  `tools/macos-setup.sh`). `OpenSSLCrypto.pas` loads libcrypto at run time: macOS's `dlopen` does not search
+  Homebrew's folders for a bare name, nor match it to the copy libssh already loaded, so it names the
+  `openssl@4`/`openssl@3` kegs by path. `TCryptoTest` passes (the test runner builds with
+  `-Flbackend/build-macos -Fl/opt/homebrew/lib -k-rpath -k<checkout>/backend/build-macos` and the fcl-fpcunit
+  path `/usr/local/lib/fpc/3.2.4/units/aarch64-darwin/fcl-fpcunit`). The tunnel itself was not tried.
+- The backend libraries still carry the absolute build folder as run path on macOS; `CMAKE_BUILD_RPATH_USE_ORIGIN`
+  (`backend/CMakeLists.txt`) has no effect there. Harmless for a build in the checkout, to fix for a bundle.
 - macOS has no `timeout` (AGENTS.md, `tests/run-matrix.sh`): `perl -e 'alarm 60; exec @ARGV' ...` works
   for now; Homebrew `coreutils` has `gtimeout`.
 

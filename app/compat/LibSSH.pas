@@ -1,7 +1,7 @@
 { SPDX-License-Identifier: GPL-2.0-or-later }
 { The part of libssh (https://www.libssh.org/, LGPL-2.1-or-later) the SSH tunnel uses (ADR-0048), declared from
   libssh.h of version 0.12. The library is linked dynamically: libssh.so.4 on Linux (the AppImage bundles its own
-  build, tools/appimage/build-libssh.sh), libssh.dll from MSYS2 on Windows. Enum values follow the header's order;
+  build, tools/appimage/build-libssh.sh), libssh.dll from MSYS2 on Windows, Homebrew's libssh on macOS. Enum values follow the header's order;
   libssh only appends to them. }
 unit LibSSH;
 
@@ -17,6 +17,10 @@ const
   LIB_SSH = 'libssh.dll';
   {$ELSE}
   LIB_SSH = 'ssh';
+  {$ENDIF}
+  {$IFDEF DARWIN}
+  { FPC ignores the library of 'external' declarations on macOS: link it explicitly }
+  {$LINKLIB ssh}
   {$ENDIF}
 
   SSH_OK = 0;

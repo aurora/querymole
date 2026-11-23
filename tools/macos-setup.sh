@@ -7,14 +7,14 @@
 #   tools/macos-setup.sh --check    only check, install nothing
 #
 # Contents: cmake/ninja/pkg-config and the backend libraries (glib, libxml2, pcre, MariaDB Connector/C)
-# from Homebrew, mingw-w64 for windres (tools/build_resources.py; the .res files are platform neutral),
+# from Homebrew, libssh for the SSH tunnel (ADR-0048), mingw-w64 for windres (tools/build_resources.py; the .res files are platform neutral),
 # Python 3. Lazarus and FPC are not in Homebrew in a usable form (the cask is disabled, the fpc formula
 # has no Lazarus): install the three packages of Lazarus 4.8 for macOS aarch64 from
 # https://sourceforge.net/projects/lazarus/files/Lazarus%20macOS%20aarch64/ (fpc, fpc-src, lazarus);
 # Lazarus goes to /Applications/Lazarus, FPC to /usr/local/bin.
 set -euo pipefail
 
-BREW_PACKAGES=(cmake ninja pkgconf python@3 glib libxml2 pcre mariadb-connector-c mingw-w64)
+BREW_PACKAGES=(cmake ninja pkgconf python@3 glib libxml2 pcre mariadb-connector-c libssh mingw-w64)
 LAZARUS="${LAZARUS_DIR:-/Applications/Lazarus}"
 
 check_only=0

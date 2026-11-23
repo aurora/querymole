@@ -39,9 +39,15 @@ const
   {$IFDEF MSWINDOWS}
   LibNames: array[0..3] of String = ('libcrypto-4-x64.dll', 'libcrypto-3-x64.dll', 'libcrypto-4.dll',
     'libcrypto-3.dll');
+  {$ELSE}{$IFDEF DARWIN}
+  // dlopen on macOS does not search Homebrew's folders for a bare name, and does not match one against the copy
+  // libssh already loaded (that one is recorded by its full path): name Homebrew's kegs (Apple Silicon, Intel)
+  LibNames: array[0..5] of String = ('/opt/homebrew/opt/openssl@4/lib/libcrypto.4.dylib',
+    '/opt/homebrew/opt/openssl@3/lib/libcrypto.3.dylib', '/usr/local/opt/openssl@4/lib/libcrypto.4.dylib',
+    '/usr/local/opt/openssl@3/lib/libcrypto.3.dylib', 'libcrypto.4.dylib', 'libcrypto.3.dylib');
   {$ELSE}
   LibNames: array[0..2] of String = ('libcrypto.so.4', 'libcrypto.so.3', 'libcrypto.so');
-  {$ENDIF}
+  {$ENDIF}{$ENDIF}
 
   // OSSL_PARAM data types
   OSSL_PARAM_UNSIGNED_INTEGER = 2;
