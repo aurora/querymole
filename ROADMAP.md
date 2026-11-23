@@ -174,6 +174,14 @@ an installer (ADR-0014); macOS is deferred (ADR-0039; `docs/macos-setup.md`).
 - Result grid, summary row: for selected (or all) numeric columns, sum, count, average, minimum and maximum of the
   loaded rows, shown in a row or bar under the grid. Off by default; needs an ADR (layout, behaviour while rows
   still load and with NULLs).
+- SQL editor, tab width: the query area and the script editor use a fixed tab width of 2 (`TabSize := 2` in
+  `QueryBrowser.pas` and `ScriptPanel.pas`, as in the original, which has no setting for it). An entry in the options
+  (and perhaps "insert spaces instead of tabs") is a new feature: needs an ADR, default 2.
+- Column details (schemata browser and table editor): a way to see more about a column than its name and type,
+  above all the values of an `ENUM`/`SET`, perhaps also default, character set / collation, comment, generated
+  expression. The space is small in both places (the table editor's type cell cuts long `ENUM(...)` lists), so the
+  presentation needs thought first (tooltip, a details panel, a small read-only dialog?): an ADR with mock-ups in the
+  original's style before any code.
 - HiDPI scaling, then optional vector-rendered icon set (ADR-0009).
 - Servers that speak the MySQL protocol (ADR-0054, proposed): a server profile (kind and version, detected at
   connect) and capabilities that generated SQL and the menus follow. Manticore first (tested 2026-11-22: connecting,
