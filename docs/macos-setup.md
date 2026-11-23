@@ -7,7 +7,8 @@
 Status: **first build done** (2026-11-17, macOS 26.4 on Apple Silicon, Apple clang 21, Homebrew glib
 2.90 / libxml2 2.15 / pcre 8.45 / Connector/C 3.4.11, FPC 3.2.4rc1, Lazarus 4.8): the backend and
 `app/bin/querymole` build, the program starts and `--shot-connect` writes the connect dialog (again on
-2026-11-23, after the SSH tunnel's libraries were added, see section 6). Steps 4.3
+2026-11-23, after the SSH tunnel's libraries were added, see section 6). A Qt6 build works as well and lays the
+dialogs out completely, unlike Cocoa (section 7). Steps 4.3
 and later have not been tried. Findings are under "State" at the end. This is the list of steps for a
 Mac with an M processor, and of the places where `build.sh` and the backend needed changes.
 Write down what you find in `docs/linux-port.md` style (state and open problems), and write an ADR
@@ -98,7 +99,13 @@ Then, in this order (stop at the first failure and record it):
 - **Architecture:** arm64 first. Intel (x86_64) only on demand, as a second build, not a Universal
   binary (it would need all Homebrew libraries as Universal).
 - **Libraries in the bundle:** the `.app` must carry the Homebrew dylibs (`dylibbundler` or
-  `install_name_tool`), otherwise it runs only on the build machine.
+  `install_name_tool`), otherwise it runs only on the build machine. That includes OpenSSL's libcrypto: libssh and
+  libmariadb link it by its Homebrew path, so a bundler copies it along into `Contents/Frameworks`. The PuTTY key
+  reader (`OpenSSLCrypto.pas`) opens it itself at run time and today knows only the Homebrew paths; it must try the
+  bundle's copy first (next to the executable, `../Frameworks/libcrypto.4.dylib`), so that the one copy libssh
+  loaded is used. Homebrew's bottles are built for the macOS they run on (26 here); a bundle that should run on
+  older versions needs the libraries built with a lower `MACOSX_DEPLOYMENT_TARGET`, as Linux builds its own on
+  AlmaLinux 9 (ADR-0027).
 - **Packaging:** `.app` inside a `.dmg`. Signing and notarisation need an Apple Developer account;
   without them users must remove the quarantine flag (`xattr -dr com.apple.quarantine QueryMole.app`),
   which belongs in the release notes for an alpha.
@@ -141,3 +148,29 @@ What had to change:
 
 Seen in the first screenshot of the connect dialog, not investigated yet: the password row is cut off at
 the bottom of the group box, and the button next to "Stored Connection" shows "," instead of "...".
+
+## 7. Cocoa and Qt6 compared (2026-11-23)
+
+The comparison ADR-0044 asks for, on the same Mac. Qt6 build:
+
+```bash
+brew install qtbase                                   # Qt 6.12; gui and printsupport are all Qt6Pas needs
+mkdir -p tools/cache/qt6pas                           # git-ignored
+cp -R /Applications/Lazarus/lcl/interfaces/qt6/cbindings/ tools/cache/qt6pas/src
+(cd tools/cache/qt6pas/src && /opt/homebrew/bin/qmake6 Qt6Pas.pro && make -j10)   # Qt6Pas.framework
+install_name_tool -id @rpath/Qt6Pas.framework/Versions/6/Qt6Pas tools/cache/qt6pas/src/Qt6Pas.framework/Versions/6/Qt6Pas
+codesign --force -s - tools/cache/qt6pas/src/Qt6Pas.framework/Versions/6/Qt6Pas
+QBR_WIDGETSET=qt6 QBR_FPC_OPTS="-Ff$PWD/tools/cache/qt6pas/src -k-rpath -k$PWD/tools/cache/qt6pas/src" ./build.sh
+```
+
+The binding is version 6.2.10 (Lazarus 4.8) against Qt 6.12; qmake only notes the difference. The program built
+without any code change (the LCL links `Qt6Pas` as a framework on Darwin), starts and shows its dialogs; it logs
+`QObject::disconnect: No such slot QComboBox::_q_returnPressed()` (Qt 6.12 dropped that private slot; seen to be
+harmless so far). Units go to `app/lib/aarch64-darwin-qt6`, next to the Cocoa ones; `app/bin/querymole` is the last
+build.
+
+Result, connect and options dialog side by side: under **Qt6 both are complete** (the password row and the "..."
+button of the connect dialog, every row of the options' General page, group captions above their frames as on
+Linux), with the Fusion style and the layout fixes made for Linux (ADR-0044, ADR-0045). Under **Cocoa** the same
+pages are cut off and overlapped (rows outside their group boxes, native controls taller than the original's).
+Not compared yet: the main window, menus (Qt on macOS also uses the global menu bar), HiDPI, interaction.
