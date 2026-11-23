@@ -894,7 +894,9 @@ end;
 procedure TMainForm.NewInstanceConnectionMIClick(Sender: TObject);
 
 begin
-  CreateSubProcess(Application.ExeName, '');
+  // revival: the new program ends when its connect dialog is cancelled, as in the original; only the first start
+  // opens the window without a connection (ADR-0052)
+  CreateSubProcess('"' + Application.ExeName + '" --new-instance', '');
 end;
 
 //----------------------------------------------------------------------------------------------------------------------
