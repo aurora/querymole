@@ -100,6 +100,8 @@ jobs:
               done
             done
           done
+          # windeployqt looks for the dependencies of the program in Qt's own bin directory, where Qt6Pas is not
+          cp /c/qt6pas/*.dll "$MINGW/"
           windeployqt6 --no-translations --no-opengl-sw "$APP/querymole.exe"
           # stop here, not on the user's machine, when something the program loads is missing
           test -f "$APP/platforms/qwindows.dll"
