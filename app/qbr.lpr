@@ -18,7 +18,7 @@ uses
   QueryBrowserOptionPages, ApplicationDataModule,
   Sections, InstanceSections, Toolbar, RegExTextImporter, ColorTypes, ColorTools,
   UCEShared, UCEHighlighter, UniCodeEditor, UCEEditorKeyCommands, UniCodeConsole,
-  StringContainers, UCESQLHighlighter, MySQLResultSet, MySQLResultSetFieldViewer, MySQLResultSetControls, EditorTableVTEdit, EditorTableVTFKEdit, EditorTable, SQLErrorGrid, SchemataTreeView, SchemaSelection, EmbeddedWB, LexicalTools, SqlCmdPanel, ScriptPanel, TableDrag, QueryBrowser, UpdateCheck, Main, DevMenuSmoke{$IFNDEF MSWINDOWS}, QtStyle, AppFonts, Math{$ENDIF};
+  StringContainers, UCESQLHighlighter, MySQLResultSet, MySQLResultSetFieldViewer, MySQLResultSetControls, EditorTableVTEdit, EditorTableVTFKEdit, EditorTable, SQLErrorGrid, SchemataTreeView, SchemaSelection, EmbeddedWB, LexicalTools, SqlCmdPanel, ScriptPanel, TableDrag, QueryBrowser, UpdateCheck, Main, DevMenuSmoke{$IF NOT DEFINED(MSWINDOWS) OR DEFINED(LCLQT6)}, QtStyle, AppFonts, Math{$IFEND};
 
 {$IFNDEF MSWINDOWS}
 procedure xmlInitParser; cdecl; external 'xml2';
@@ -171,7 +171,7 @@ begin
   Application.Title := RevivalProductName;
   {$IFNDEF MSWINDOWS}AddBundledTahoma;{$ENDIF}   // Port: see unit AppFonts
   Application.Initialize;
-  {$IFNDEF MSWINDOWS}UseFusionStyle; AddBundledTahomaToQt;{$ENDIF}   // Port: see units QtStyle, AppFonts (Qt6 only)
+  {$IF NOT DEFINED(MSWINDOWS) OR DEFINED(LCLQT6)}UseFusionStyle; AddBundledTahomaToQt;{$IFEND}   // Port: see units QtStyle, AppFonts (Qt6 only)
   InitGlobalVars;
 
   Trace('options loaded, command line checked; ppi=' + IntToStr(Screen.PixelsPerInch));
@@ -268,7 +268,7 @@ begin
     Trace('instance registered');
     try
     MainForm.PrepareGUI;
-    {$IFNDEF MSWINDOWS}AdjustMenuBar(MainForm);{$ENDIF}   // Port: see unit QtStyle (Qt6 only)
+    {$IF NOT DEFINED(MSWINDOWS) OR DEFINED(LCLQT6)}AdjustMenuBar(MainForm);{$IFEND}   // Port: see unit QtStyle (Qt6 only)
     Trace('gui prepared');
     ShotFile := '';
     for I := 1 to ParamCount - 1 do

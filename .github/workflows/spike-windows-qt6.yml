@@ -1,0 +1,96 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Experiment (branch spike/windows-qt6): build the Windows program with the Qt6 widgetset instead of Win32 and keep the
+# result as a workflow artifact. Nothing is published. Not part of any release.
+#
+#   style:   set QBR_QT_STYLE=windows11 (or Fusion, windowsvista) in the environment before starting querymole.exe
+name: spike-windows-qt6
+
+on:
+  push:
+    branches: ['spike/windows-qt6']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  LAZARUS_INSTALLER: https://downloads.sourceforge.net/project/lazarus/Lazarus%20Windows%2064%20bits/Lazarus%204.8/lazarus-4.8-fpc-3.2.2-win64.exe
+
+jobs:
+  windows-qt6:
+    runs-on: windows-2025
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: true
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          release: false
+          update: false
+          path-type: inherit
+          install: >-
+            mingw-w64-x86_64-gcc mingw-w64-x86_64-binutils mingw-w64-x86_64-cmake mingw-w64-x86_64-ninja
+            mingw-w64-x86_64-make mingw-w64-x86_64-pkgconf mingw-w64-x86_64-glib2 mingw-w64-x86_64-libxml2
+            mingw-w64-x86_64-pcre mingw-w64-x86_64-libmariadbclient mingw-w64-x86_64-libssh
+            mingw-w64-x86_64-qt6-base
+
+      - name: Cache Lazarus
+        id: lazarus
+        uses: actions/cache@v5
+        with:
+          path: C:\lazarus
+          key: lazarus-4.8-fpc-3.2.2-win64
+      - name: Install Lazarus 4.8 to C:\lazarus
+        if: steps.lazarus.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri $env:LAZARUS_INSTALLER -OutFile lazarus-setup.exe -UserAgent 'Wget'
+          Start-Process -Wait -FilePath .\lazarus-setup.exe -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-','/DIR=C:\lazarus'
+          if (-not (Test-Path C:\lazarus\lazbuild.exe)) { throw 'Lazarus installation failed' }
+
+      # the C binding between the LCL's Qt6 widgetset and Qt, built from the binding sources of this Lazarus (ADR-0044)
+      - name: Build Qt6Pas
+        run: |
+          set -e
+          src=/c/lazarus/lcl/interfaces/qt6/cbindings
+          ls "$src" | head
+          rm -rf /tmp/qt6pas && cp -r "$src" /tmp/qt6pas
+          cd /tmp/qt6pas
+          qmake6 Qt6Pas.pro
+          mingw32-make -j4
+          find . -iname '*qt6pas*.dll*' -o -iname '*qt6pas*.a' | sort
+          mkdir -p /c/qt6pas && cp $(find . -iname '*.dll') /c/qt6pas/ && cp $(find . -iname '*.a') /c/qt6pas/ || true
+          ls -la /c/qt6pas
+
+      - name: Build the program with Qt6
+        env:
+          QBR_WIDGETSET: qt6
+        run: |
+          set -e
+          export PATH="/c/qt6pas:$PATH"
+          ./build.sh --backend --runtime 2>&1 | tail -40
+          ls -la app/bin/querymole.exe
+
+      - name: Collect the files
+        run: |
+          set -e
+          mkdir -p dist/qt6 && cp -r app/bin/. dist/qt6/
+          cp /c/qt6pas/*.dll dist/qt6/
+          for n in $(ldd dist/qt6/querymole.exe | awk '{print $1}'); do
+            [ -f "/mingw64/bin/$n" ] && cp -n "/mingw64/bin/$n" dist/qt6/ || true
+          done
+          windeployqt6 --no-translations --no-opengl-sw dist/qt6/querymole.exe || true
+          du -sh dist/qt6
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: querymole-windows-qt6
+          if-no-files-found: error
+          path: dist/qt6/

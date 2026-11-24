@@ -56,7 +56,10 @@ var
 
 begin
   {$IFDEF LCLQT6}
-  Name := 'Fusion';
+  // spike: QBR_QT_STYLE picks another Qt style (e.g. windows11, windowsvista) to compare; Fusion is the default (ADR-0045)
+  Name := WideString(GetEnvironmentVariable('QBR_QT_STYLE'));
+  if Name = '' then
+    Name := 'Fusion';
   Style := QStyleFactory_create(@Name);
   if Style = nil then
     Exit;

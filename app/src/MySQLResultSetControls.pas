@@ -24,7 +24,7 @@ interface
 
 uses
   // Delphi units.
-  {$IFDEF MSWINDOWS}Windows{$ELSE}LCLIntf, WinAliases, Types{$ENDIF}, Messages, LMessages, LCLType, SysUtils, Classes, Contnrs, Graphics, Controls, Forms, {$IFDEF MSWINDOWS}ActiveX,{$ELSE}laz.FakeActiveX,{$ENDIF} Menus,
+  {$IFDEF MSWINDOWS}Windows{$ELSE}LCLIntf, WinAliases, Types{$ENDIF}, Messages, LMessages, LCLType, SysUtils, Classes, Contnrs, Graphics, Controls, Forms, {$IF DEFINED(MSWINDOWS) AND NOT DEFINED(LCLQT6)}ActiveX,{$ELSE}laz.FakeActiveX,{$IFEND} Menus,
   // Third party units.
   laz.VirtualTrees, VTCompat, Unicode,
   TntExtCtrls, TntComCtrls, TntClasses, TntStdCtrls, TntForms, TntMenus, TntSysUtils, TntDialogs, TnTClipbrd,

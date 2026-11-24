@@ -32,6 +32,8 @@ if [ "$windows" = 1 ]; then
   EXE=querymole.exe
   export PATH="$MINGW:$BACKEND_BUILD:$LAZARUS:$PATH"
   LAZBUILD=("$LAZARUS/lazbuild.exe" --lazarusdir="$(cygpath -m "$LAZARUS")")
+  # spike/windows-qt6: QBR_WIDGETSET=qt6 builds the Windows program with Qt6 (libQt6Pas.dll and Qt on PATH)
+  if [ -n "${QBR_WIDGETSET:-}" ]; then LAZBUILD+=("--ws=$QBR_WIDGETSET"); fi
 elif [ "$macos" = 1 ]; then
   BREW="${HOMEBREW_PREFIX:-/opt/homebrew}"
   LAZARUS="${LAZARUS_DIR:-/Applications/Lazarus}"
