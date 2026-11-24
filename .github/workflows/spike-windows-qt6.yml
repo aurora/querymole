@@ -78,16 +78,35 @@ jobs:
           ./build.sh --backend --runtime 2>&1 | tail -40
           ls -la app/bin/querymole.exe
 
+      # as tools/package.sh stages the Win32 program: the backend DLLs, then whatever they and the program need
+      # from MSYS2 (by name: ldd may resolve a name to System32 first), repeated until nothing new is needed
       - name: Collect the files
         run: |
           set -e
-          mkdir -p dist/qt6 && cp -r app/bin/. dist/qt6/
-          cp /c/qt6pas/*.dll dist/qt6/
-          for n in $(ldd dist/qt6/querymole.exe | awk '{print $1}'); do
-            [ -f "/mingw64/bin/$n" ] && cp -n "/mingw64/bin/$n" dist/qt6/ || true
+          APP=dist/qt6
+          MINGW=/c/msys64/mingw64/bin
+          mkdir -p "$APP" && cp -r app/bin/. "$APP/"
+          cp backend/build/*.dll "$APP/"
+          cp /c/qt6pas/*.dll "$APP/"
+          export PATH="$MINGW:$PWD/backend/build:/c/qt6pas:$PATH"
+          names=$( (ldd "$APP/querymole.exe"; for d in "$APP"/*.dll; do ldd "$d"; done) | awk '{print $1}' | sort -u )
+          for n in $names libssl-4-x64.dll libcrypto-4-x64.dll libssl-3-x64.dll libcrypto-3-x64.dll; do
+            if [ -f "$MINGW/$n" ] && [ ! -f "$APP/$n" ]; then cp "$MINGW/$n" "$APP/"; fi
           done
-          windeployqt6 --no-translations --no-opengl-sw dist/qt6/querymole.exe || true
-          du -sh dist/qt6
+          for pass in 1 2 3; do
+            for f in "$APP"/*.dll; do
+              for n in $(ldd "$f" | awk '{print $1}'); do
+                if [ -f "$MINGW/$n" ] && [ ! -f "$APP/$n" ]; then cp "$MINGW/$n" "$APP/"; fi
+              done
+            done
+          done
+          windeployqt6 --no-translations --no-opengl-sw "$APP/querymole.exe"
+          # stop here, not on the user's machine, when something the program loads is missing
+          test -f "$APP/platforms/qwindows.dll"
+          for f in "$APP/querymole.exe" "$APP"/*.dll; do
+            ldd "$f" | grep -i "not found" && { echo "missing for $f"; exit 1; } || true
+          done
+          ls "$APP" "$APP/platforms"; du -sh "$APP"
 
       - uses: actions/upload-artifact@v6
         with:
