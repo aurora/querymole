@@ -88,6 +88,14 @@ an installer (ADR-0014); macOS is deferred (ADR-0039; `docs/macos-setup.md`).
 ## Backlog and ideas
 
 **Compatibility and quality**
+- Windows with Qt6 instead of Win32 (long-term wish, parked 2026-11-24, not before 1.0.0): the branch
+  `spike/windows-qt6` builds it (`--ws=qt6` for Win64 compiles after one guard change; `QBR_QT_STYLE=windows11` picks
+  Qt's Windows 11 style, `QBR_WIDGETSET=qt6 ./build.sh` and `.github/workflows/spike-windows-qt6.yml` build it in CI).
+  First run (over RDP, so the scaling is not conclusive): the program starts, but labels are cut off, some fields of
+  the connect dialog do not show and the menu entries look disabled: the pixel layouts and palette would need the
+  tuning that Linux got over several alphas, and the `MSWINDOWS` code that calls WinAPI on widget handles
+  (`SendMessage`, `DrawTextW` on a canvas, `GetDC`) must be reviewed. Needs an ADR (supersede or extend ADR-0044) and a
+  test with real (not RDP) display scaling first.
 - CI: releases are built and published by `.github/workflows/release.yml` (ADR-0040, in use since 0.1.0-alpha.3); every
   push is built and tested by `.github/workflows/test.yml` (ADR-0046: `tests/ci.sh`, server matrix on Linux, build
   check on Windows). Open: tests on Windows (servers there), screenshot comparison in CI.
